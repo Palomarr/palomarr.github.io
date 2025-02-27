@@ -192,7 +192,7 @@ background-size: cover;
 <section id="abstract" class="level2">
 <h2 class="anchored" data-anchor-id="abstract">Abstract</h2>
 <p>This analysis explores the Palmer Penguins dataset to develop a robust classification model that can accurately identify penguin species based on physical characteristics. Through systematic feature selection and model evaluation, I identified an effective three-feature combination consisting of one qualitative feature (Island) and two quantitative features (Culmen Length and Culmen Depth) that enables species classification using a decision tree with appropriate depth parameters.</p>
-<div id="4bd8e9a2-b213-44d1-b1ee-b4fa2f5c6c2f" class="cell" data-execution_count="83">
+<div id="4bd8e9a2-b213-44d1-b1ee-b4fa2f5c6c2f" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
@@ -205,7 +205,7 @@ background-size: cover;
 <section id="data-loading-and-preprocessing" class="level2">
 <h2 class="anchored" data-anchor-id="data-loading-and-preprocessing">Data Loading and Preprocessing</h2>
 <p>We load the raw training data and use the prepare_data function to generate a fully processed version for exploration. In parallel, we create a filtered version (<code>df_filtered</code>) that retains the original qualitative columns (e.g.&nbsp;Island, Clutch Completion) — this DataFrame is used in candidate search and final model training.</p>
-<div id="d99a9668-b1d4-4115-92d1-1880fc93825a" class="cell" data-execution_count="84">
+<div id="d99a9668-b1d4-4115-92d1-1880fc93825a" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> LabelEncoder</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>train_url <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/PhilChodrow/ml-notes/main/data/palmer-penguins/train.csv"</span></span>
@@ -237,7 +237,7 @@ background-size: cover;
 <section id="visualizations-and-summary-table" class="level2">
 <h2 class="anchored" data-anchor-id="visualizations-and-summary-table">Visualizations and Summary Table</h2>
 <p>We perform analysis using a pairplot and a grouped summary table for three selected features.</p>
-<div id="e59cb42b-f14f-4d3d-8538-5d4588a02361" class="cell" data-execution_count="85">
+<div id="e59cb42b-f14f-4d3d-8538-5d4588a02361" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.feature_selection <span class="im">import</span> SelectKBest, f_classif</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Use SelectKBest to pick three features with highest f-values</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>selector <span class="op">=</span> SelectKBest(f_classif, k<span class="op">=</span><span class="dv">3</span>)</span>
@@ -256,7 +256,7 @@ background-size: cover;
 </div>
 </div>
 <p>“Culmen Length”, “Culmen Depth”, and “Flipper Length” are the most discriminative features selected by our SelectKBest function. We then use these three features to create a pairplot, which shows the pairwise relationships between the three features, and a summary table.</p>
-<div id="694976b0" class="cell" data-execution_count="86">
+<div id="694976b0" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>selected_features <span class="op">=</span> [<span class="st">"Culmen Length (mm)"</span>, <span class="st">"Culmen Depth (mm)"</span>, <span class="st">"Flipper Length (mm)"</span>]</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a DataFrame for visualization using the selected features.</span></span>
@@ -342,7 +342,7 @@ Gentoo penguin (Pygoscelis papua)          220.0  230.0
 <section id="candidate-search" class="level2">
 <h2 class="anchored" data-anchor-id="candidate-search">Candidate Search</h2>
 <p>We now iterate over all combinations of one qualitative candidate and two quantitative candidates. Using our filtered data (<code>df_filtered</code>) and its labels (<code>y_all</code>), we test each candidate set with a Decision Tree classifier across a range of max_depth values. The best combination is recorded.</p>
-<div id="a5f851f0-16dd-4cf6-a193-1b4d22c2bff7" class="cell">
+<div id="a5f851f0-16dd-4cf6-a193-1b4d22c2bff7" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> combinations</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.tree <span class="im">import</span> DecisionTreeClassifier</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> accuracy_score</span>
@@ -412,25 +412,21 @@ Gentoo penguin (Pygoscelis papua)          220.0  230.0
 <span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Highest Test Accuracy:"</span>, best_overall[<span class="st">"acc"</span>])</span>
 <span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Feature Combination:"</span>, best_overall[<span class="st">"features"</span>])</span>
 <span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Model:"</span>, best_overall[<span class="st">"model_name"</span>])</span>
-<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Hyperparameter Setting:"</span>, best_overall[<span class="st">"hyperparam"</span>])</span>
-<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> best_overall[<span class="st">"acc"</span>] <span class="op">&lt;</span> <span class="fl">1.0</span>:</span>
-<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"No combination achieved 100% test accuracy. Consider exploring additional models or feature combinations."</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Hyperparameter Setting:"</span>, best_overall[<span class="st">"hyperparam"</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Best overall result:
 Highest Test Accuracy: 0.987012987012987
 Feature Combination: ['Culmen Length (mm)', 'Culmen Depth (mm)', 'Island']
 Model: DecisionTreeClassifier
-Hyperparameter Setting: max_depth=4
-No combination achieved 100% test accuracy. Consider exploring additional models or feature combinations.</code></pre>
+Hyperparameter Setting: max_depth=4</code></pre>
 </div>
 </div>
 </section>
 <section id="retrain-final-model-and-visualize-decision-regions" class="level2">
 <h2 class="anchored" data-anchor-id="retrain-final-model-and-visualize-decision-regions">Retrain Final Model and Visualize Decision Regions</h2>
 <p>Using the best candidate features (“Culmen Length (mm)”, “Culmen Depth (mm)”, “Island”) and the best hyperparameter, we retrain the final Decision Tree on the entire filtered dataset. We then plot the decision regions over the two quantitative features, separated by the qualitative feature.</p>
-<div id="44a3a360-4e55-4a6e-bc2d-f293c0e45ce2" class="cell">
+<div id="44a3a360-4e55-4a6e-bc2d-f293c0e45ce2" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>best_features <span class="op">=</span> best_overall[<span class="st">"features"</span>]</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>quant_feats <span class="op">=</span> best_features[:<span class="dv">2</span>]</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>qual_feat <span class="op">=</span> best_features[<span class="dv">2</span>]</span>
@@ -460,7 +456,7 @@ No combination achieved 100% test accuracy. Consider exploring additional models
 </div>
 </div>
 <p>After training the model, we plot the decision regions separated by Island.</p>
-<div id="c6979de2" class="cell" data-execution_count="89">
+<div id="c6979de2" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib.patches <span class="im">import</span> Patch</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -534,7 +530,7 @@ No combination achieved 100% test accuracy. Consider exploring additional models
 <section id="evaluation" class="level2">
 <h2 class="anchored" data-anchor-id="evaluation">Evaluation</h2>
 <p>We compute a confusion matrix on the test set to evaluate the model’s performance.</p>
-<div id="f1878cc9-9ad5-4c70-8f5c-8a737d94d718" class="cell" data-execution_count="90">
+<div id="f1878cc9-9ad5-4c70-8f5c-8a737d94d718" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> confusion_matrix</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(y_test_final, clf_best.predict(X_test_final))</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Confusion Matrix on Test Set:"</span>)</span>
