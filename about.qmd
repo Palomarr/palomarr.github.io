@@ -6,7 +6,7 @@ about:
   links:
     - icon: twitter
       text: Twitter
-      href: https://twitter.com
+      href: https://x.com/cfm_miku_en
     - icon: linkedin
       text: LinkedIn
       href: https://linkedin.com
