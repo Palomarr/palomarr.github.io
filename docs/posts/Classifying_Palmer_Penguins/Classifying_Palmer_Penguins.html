@@ -192,7 +192,7 @@ background-size: cover;
 <section id="abstract" class="level2">
 <h2 class="anchored" data-anchor-id="abstract">Abstract</h2>
 <p>This analysis explores the Palmer Penguins dataset to develop a robust classification model that can accurately identify penguin species based on physical characteristics. Through systematic feature selection and model evaluation, I identified an effective three-feature combination consisting of one qualitative feature (Island) and two quantitative features (Culmen Length and Culmen Depth) that enables species classification using a decision tree with appropriate depth parameters.</p>
-<div id="4bd8e9a2-b213-44d1-b1ee-b4fa2f5c6c2f" class="cell" data-execution_count="3">
+<div id="4bd8e9a2-b213-44d1-b1ee-b4fa2f5c6c2f" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
@@ -205,7 +205,7 @@ background-size: cover;
 <section id="data-loading-and-preprocessing" class="level2">
 <h2 class="anchored" data-anchor-id="data-loading-and-preprocessing">Data Loading and Preprocessing</h2>
 <p>We load the raw training data and use the prepare_data function to generate a fully processed version for exploration. In parallel, we create a filtered version (<code>df_filtered</code>) that retains the original qualitative columns (e.g.&nbsp;Island, Clutch Completion) — this DataFrame is used in candidate search and final model training.</p>
-<div id="d99a9668-b1d4-4115-92d1-1880fc93825a" class="cell" data-execution_count="4">
+<div id="d99a9668-b1d4-4115-92d1-1880fc93825a" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> LabelEncoder</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>train_url <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/PhilChodrow/ml-notes/main/data/palmer-penguins/train.csv"</span></span>
@@ -237,7 +237,7 @@ background-size: cover;
 <section id="visualizations-and-summary-table" class="level2">
 <h2 class="anchored" data-anchor-id="visualizations-and-summary-table">Visualizations and Summary Table</h2>
 <p>We perform analysis using a pairplot and a grouped summary table for three selected features.</p>
-<div id="e59cb42b-f14f-4d3d-8538-5d4588a02361" class="cell" data-execution_count="5">
+<div id="e59cb42b-f14f-4d3d-8538-5d4588a02361" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.feature_selection <span class="im">import</span> SelectKBest, f_classif</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Use SelectKBest to pick three features with highest f-values</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>selector <span class="op">=</span> SelectKBest(f_classif, k<span class="op">=</span><span class="dv">3</span>)</span>
@@ -256,7 +256,7 @@ background-size: cover;
 </div>
 </div>
 <p>“Culmen Length”, “Culmen Depth”, and “Flipper Length” are the most discriminative features selected by our SelectKBest function. We then use these three features to create a pairplot, which shows the pairwise relationships between the three features, and a summary table.</p>
-<div id="694976b0" class="cell" data-execution_count="6">
+<div id="694976b0" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>selected_features <span class="op">=</span> [<span class="st">"Culmen Length (mm)"</span>, <span class="st">"Culmen Depth (mm)"</span>, <span class="st">"Flipper Length (mm)"</span>]</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a DataFrame for visualization using the selected features.</span></span>
@@ -269,14 +269,42 @@ background-size: cover;
 <span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>plt.suptitle(<span class="st">"Pairplot of Selected Features"</span>, y<span class="op">=</span><span class="fl">1.02</span>)</span>
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
 <span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Grouped Summary Table</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>grouped_stats <span class="op">=</span> plot_df.groupby(<span class="st">"Species"</span>)[selected_features].describe()</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Grouped Summary Statistics for Selected Features by Species:"</span>)</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(grouped_stats)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Bivariate plot with island information</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">8</span>))</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>sns.scatterplot(</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span><span class="st">'Culmen Length (mm)'</span>, </span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    y<span class="op">=</span><span class="st">'Culmen Depth (mm)'</span>, </span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    hue<span class="op">=</span><span class="st">'Species'</span>,</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    style<span class="op">=</span><span class="st">'Island'</span>,  <span class="co"># Use different markers for each island</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    s<span class="op">=</span><span class="dv">100</span>,  <span class="co"># Increase point size</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    data<span class="op">=</span>df_filtered,</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    palette<span class="op">=</span><span class="st">'viridis'</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Culmen Measurements by Species and Island'</span>, fontsize<span class="op">=</span><span class="dv">14</span>)</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Culmen Length (mm)'</span>, fontsize<span class="op">=</span><span class="dv">12</span>)</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Culmen Depth (mm)'</span>, fontsize<span class="op">=</span><span class="dv">12</span>)</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>plt.grid(linestyle<span class="op">=</span><span class="st">'--'</span>, alpha<span class="op">=</span><span class="fl">0.7</span>)</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>plt.legend(title_fontsize<span class="op">=</span><span class="dv">12</span>, fontsize<span class="op">=</span><span class="dv">10</span>)</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Grouped Summary Table</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>grouped_stats <span class="op">=</span> plot_df.groupby(<span class="st">"Species"</span>)[selected_features].describe()</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Grouped Summary Statistics for Selected Features by Species:"</span>)</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(grouped_stats)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
 <p><img src="Classifying_Palmer_Penguins_files/figure-html/cell-5-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Classifying_Palmer_Penguins_files/figure-html/cell-5-output-2.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
@@ -336,13 +364,14 @@ Gentoo penguin (Pygoscelis papua)          220.0  230.0
 </div>
 <p>The pairplot provides a visual representation of how the three penguin species—Adélie, Chinstrap, and Gentoo—differ in their culmen and flipper measurements. One of the most striking observations is the clear clustering of species. Gentoo penguins tend to have the longest Flipper Length and Culmen Length, making them relatively easy to separate from the other two species. Chinstrap penguins, on the other hand, exhibit the greatest Culmen Length, though they overlap more closely with Adélie in other features. Adélie penguins generally have the shortest Culmen Length and Flipper Length, forming a distinct but slightly overlapping group with Chinstrap.</p>
 <p>Examining the relationships between features, we see that Culmen Length and Flipper Length show a positive correlation, particularly for Gentoo penguins, meaning individuals with longer bills also tend to have longer flippers. However, Culmen Depth does not exhibit as much variability among Adélie and Chinstrap penguins, suggesting that this feature alone is not as useful in distinguishing between them. Instead, it primarily differentiates Gentoo, which has shallower bills compared to the other two species.</p>
+<p>Our additional scatter plot further reveals the importance of island location in species distribution. Gentoo penguins (teal x’s) occupy the lower right region with longer culmen lengths and shallower depths, and are predominantly found on Biscoe Island. Chinstrap penguins (blue circles) occupy the upper right region with moderate to long culmen lengths and deeper depths, and are mainly found on Dream Island. Adélie penguins (green markers) are distributed across all three islands with shorter culmen lengths and variable depths. This geographic distribution pattern explains why incorporating Island as a feature strengthens our classification model.</p>
 <p>The table reinforces these observations with numerical summaries. Gentoo penguins stand out with an average Flipper Length of approximately 216.74 mm, significantly longer than both Adélie (190.53 mm) and Chinstrap (195.82 mm). Additionally, Chinstrap penguins exhibit the longest Culmen Length on average (48.77 mm), making this feature useful for distinguishing them from Adélie, whose mean is notably lower (38.96 mm). Culmen Depth, while less variable between Adélie and Chinstrap, helps distinguish Gentoo, which has a shallower culmen depth on average.</p>
-<p>Overall, the combination of Flipper Length and Culmen Length appears to be particularly strong in distinguishing Gentoo from the other two species, while Culmen Length helps further separate Chinstrap from Adélie. Although some overlap remains—especially between Chinstrap and Adélie—these features provide a strong foundation for classifying species with high accuracy.</p>
+<p>Overall, the combination of Flipper Length and Culmen Length appears to be particularly strong in distinguishing Gentoo from the other two species, while Culmen Length helps further separate Chinstrap from Adélie. When combined with Island information, these features provide a strong foundation for classifying species with high accuracy.</p>
 </section>
 <section id="candidate-search" class="level2">
 <h2 class="anchored" data-anchor-id="candidate-search">Candidate Search</h2>
 <p>We now iterate over all combinations of one qualitative candidate and two quantitative candidates. Using our filtered data (<code>df_filtered</code>) and its labels (<code>y_all</code>), we test each candidate set with a Decision Tree classifier across a range of max_depth values. The best combination is recorded.</p>
-<div id="a5f851f0-16dd-4cf6-a193-1b4d22c2bff7" class="cell" data-execution_count="7">
+<div id="a5f851f0-16dd-4cf6-a193-1b4d22c2bff7" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> combinations</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.tree <span class="im">import</span> DecisionTreeClassifier</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> accuracy_score</span>
@@ -426,7 +455,7 @@ Hyperparameter Setting: max_depth=4</code></pre>
 <section id="retrain-final-model-and-visualize-decision-regions" class="level2">
 <h2 class="anchored" data-anchor-id="retrain-final-model-and-visualize-decision-regions">Retrain Final Model and Visualize Decision Regions</h2>
 <p>Using the best candidate features (“Culmen Length (mm)”, “Culmen Depth (mm)”, “Island”) and the best hyperparameter, we retrain the final Decision Tree on the entire filtered dataset. We then plot the decision regions over the two quantitative features, separated by the qualitative feature.</p>
-<div id="44a3a360-4e55-4a6e-bc2d-f293c0e45ce2" class="cell" data-execution_count="8">
+<div id="44a3a360-4e55-4a6e-bc2d-f293c0e45ce2" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>best_features <span class="op">=</span> best_overall[<span class="st">"features"</span>]</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>quant_feats <span class="op">=</span> best_features[:<span class="dv">2</span>]</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>qual_feat <span class="op">=</span> best_features[<span class="dv">2</span>]</span>
@@ -456,7 +485,7 @@ Hyperparameter Setting: max_depth=4</code></pre>
 </div>
 </div>
 <p>After training the model, we plot the decision regions separated by Island.</p>
-<div id="c6979de2" class="cell" data-execution_count="9">
+<div id="c6979de2" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib.patches <span class="im">import</span> Patch</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -530,7 +559,7 @@ Hyperparameter Setting: max_depth=4</code></pre>
 <section id="evaluation" class="level2">
 <h2 class="anchored" data-anchor-id="evaluation">Evaluation</h2>
 <p>We compute a confusion matrix on the test set to evaluate the model’s performance.</p>
-<div id="f1878cc9-9ad5-4c70-8f5c-8a737d94d718" class="cell" data-execution_count="10">
+<div id="f1878cc9-9ad5-4c70-8f5c-8a737d94d718" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> confusion_matrix</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>cm <span class="op">=</span> confusion_matrix(y_test_final, clf_best.predict(X_test_final))</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Confusion Matrix on Test Set:"</span>)</span>
