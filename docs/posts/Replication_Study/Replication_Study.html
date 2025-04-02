@@ -195,7 +195,7 @@ background-size: cover;
 </section>
 <section id="part-a-data-access" class="level1">
 <h1>Part A: Data Access</h1>
-<div id="cell-5" class="cell" data-execution_count="36">
+<div id="cell-5" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> <span class="st">"https://gitlab.com/labsysmed/dissecting-bias/-/raw/master/data/data_new.csv?inline=false"</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(url)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -203,7 +203,7 @@ background-size: cover;
 </section>
 <section id="part-b-reproduce-fig.-1" class="level1">
 <h1>Part B: Reproduce Fig. 1</h1>
-<div id="cell-7" class="cell" data-execution_count="37">
+<div id="cell-7" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
@@ -257,7 +257,7 @@ background-size: cover;
 <section id="panel-a-expenditures-by-risk-score-percentile" class="level2">
 <h2 class="anchored" data-anchor-id="panel-a-expenditures-by-risk-score-percentile">1. Panel&nbsp;A: Expenditures by Risk Score Percentile</h2>
 <p>First, we divide the risk scores into 100 quantile bins. By using <code>pd.qcut()</code>, we ensure an approximately equal number of patients in each bin, which helps create a more balanced visualization. The <code>duplicates='drop'</code> parameter ensures we handle any tied values properly. Next, we aggregate the data by both risk percentile bin and race, calculating the mean risk percentile and mean expenditures for each group. This summarization allows us to visualize how costs vary across different risk levels for each racial group. We also count the unique bins to understand how many distinct groups we’ve created.</p>
-<div id="cell-12" class="cell" data-execution_count="38">
+<div id="cell-12" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create 100 bins based on the raw risk scores using qcut</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'risk_percentile_bin'</span>] <span class="op">=</span> pd.qcut(df[<span class="st">'risk_score_t'</span>], q<span class="op">=</span><span class="dv">100</span>, labels<span class="op">=</span><span class="va">False</span>, duplicates<span class="op">=</span><span class="st">'drop'</span>)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -274,7 +274,7 @@ background-size: cover;
 <section id="panel-b-expenditures-by-chronic-conditions" class="level2">
 <h2 class="anchored" data-anchor-id="panel-b-expenditures-by-chronic-conditions">2. Panel&nbsp;B: Expenditures by Chronic Conditions</h2>
 <p>For the second panel, we repeat a similar process but focusing on chronic conditions rather than risk scores. We create 100 quantile bins based on the number of chronic conditions (<code>gagne_sum_t</code>), then aggregate the data to calculate mean chronic conditions and mean expenditures for each bin and race. This allows us to compare how healthcare costs vary with illness burden across racial groups.</p>
-<div id="cell-15" class="cell" data-execution_count="39">
+<div id="cell-15" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'chronic_bin'</span>] <span class="op">=</span> pd.qcut(df[<span class="st">'gagne_sum_t'</span>], q<span class="op">=</span><span class="dv">100</span>, labels<span class="op">=</span><span class="va">False</span>, duplicates<span class="op">=</span><span class="st">'drop'</span>)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Group by these bins and race to compute the mean number of chronic conditions and mean expenditures</span></span>
@@ -291,7 +291,7 @@ background-size: cover;
 <h2 class="anchored" data-anchor-id="plotting-both-panels-side-by-side">3. Plotting Both Panels Side by Side</h2>
 <p>With our aggregated data, we now create a two-panel figure. For Panel A, we visualize the relationship between risk scores and healthcare expenditures. We use distinctive markers and colors to differentiate between racial groups. By inverting the x-axis, higher risk percentiles appear on the left, matching the original paper’s presentation and making it easier to focus on the highest-risk patients.</p>
 <p>For Panel B, we construct the second visualization showing the relationship between chronic conditions and healthcare expenditures. Using the same styling approach as Panel A ensures visual consistency. The tight_layout() function optimizes the spacing between subplots for a clean presentation.</p>
-<div id="cell-18" class="cell" data-execution_count="40">
+<div id="cell-18" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">14</span>, <span class="dv">6</span>))</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Panel A: Mean Expenditures vs. Mean Risk Percentile</span></span>
@@ -345,7 +345,7 @@ background-size: cover;
 <section id="loading-and-preparing-the-data" class="level2">
 <h2 class="anchored" data-anchor-id="loading-and-preparing-the-data">1. Loading and Preparing the Data</h2>
 <p>We begin by importing essential statistical and machine learning libraries that will enable us to build and evaluate our regression models. Since our analysis involves logarithmic transformation, we filter out patients with zero cost records (as log(0) is mathematically undefined). We then prepare our data by creating a log-transformed cost variable and a binary indicator for race.</p>
-<div id="cell-23" class="cell" data-execution_count="41">
+<div id="cell-23" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> Ridge</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> cross_val_score, KFold</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> warnings</span>
@@ -366,7 +366,7 @@ background-size: cover;
 <section id="defining-helper-functions" class="level2">
 <h2 class="anchored" data-anchor-id="defining-helper-functions">2. Defining Helper Functions</h2>
 <p>To properly model the relationship between health status and costs, we need to account for potential nonlinear patterns. We define two utility functions: one that standardizes variables to improve model convergence, and another that generates polynomial features to capture nonlinear relationships between chronic conditions and healthcare costs.</p>
-<div id="cell-26" class="cell" data-execution_count="42">
+<div id="cell-26" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> standard_scale(series):</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (series <span class="op">-</span> series.mean()) <span class="op">/</span> series.std()</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -380,7 +380,7 @@ background-size: cover;
 <section id="building-the-design-matrix" class="level2">
 <h2 class="anchored" data-anchor-id="building-the-design-matrix">3. Building the Design Matrix</h2>
 <p>This function constructs our model’s input data by creating a feature matrix that captures both the health status of patients (through polynomial transformations of chronic condition counts) and their racial identity. The standardization step ensures our model doesn’t favor higher-magnitude features, while the polynomial expansion allows us to detect complex patterns in how health status relates to costs.</p>
-<div id="cell-29" class="cell" data-execution_count="43">
+<div id="cell-29" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> build_design_matrix(df, degree):</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    df_temp <span class="op">=</span> df.copy()</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    </span>
@@ -408,7 +408,7 @@ background-size: cover;
 <section id="cross-validation-over-degree-and-alpha" class="level2">
 <h2 class="anchored" data-anchor-id="cross-validation-over-degree-and-alpha">4. Cross-Validation over Degree and Alpha</h2>
 <p>To find the optimal model that balances complexity against generalizability, we perform a grid search across different polynomial degrees and regularization strengths. We employ 5-fold cross-validation to ensure our model will perform well on new data, and we track the mean squared error to identify the combination that best captures the relationship between health status, race, and healthcare costs.</p>
-<div id="cell-32" class="cell" data-execution_count="44">
+<div id="cell-32" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> warnings.catch_warnings():</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    warnings.filterwarnings(<span class="st">"ignore"</span>)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -451,7 +451,7 @@ Best CV MSE: 1.5085</code></pre>
 <section id="refit-the-final-model-and-print-results" class="level2">
 <h2 class="anchored" data-anchor-id="refit-the-final-model-and-print-results">5. Refit the Final Model and Print Results</h2>
 <p>Using the optimal parameters identified through cross-validation, we now train our final model on the complete dataset. The coefficient for our race dummy variable directly quantifies the disparity in healthcare costs between Black and White patients after controlling for health status. Since our model uses log-transformed costs, we exponentiate and convert to a percentage to provide an intuitive interpretation of the racial disparity in healthcare spending.</p>
-<div id="cell-35" class="cell" data-execution_count="45">
+<div id="cell-35" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> warnings.catch_warnings():</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    warnings.filterwarnings(<span class="st">"ignore"</span>)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Refit using the best combination</span></span>
