@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>CSCI 0451 Blog – My Awesome CSCI 0451 Blog</title>
+<title>Sparse Kernel Machines – My Awesome CSCI 0451 Blog</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,27 +20,59 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
-<script src="site_libs/quarto-html/quarto.js"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-549806ee2085284f45b00abea8c6df48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-6de787833effe4777a6777a5e05fb578.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-549806ee2085284f45b00abea8c6df48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-6de787833effe4777a6777a5e05fb578.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -68,35 +100,6 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
-
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-title','listing-author','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
 <style>
 
       .quarto-title-block .quarto-title-banner h1,
@@ -111,52 +114,23 @@ ul.task-list li input[type="checkbox"] {
 
       .quarto-title-block .quarto-title-banner {
         color: white;
-background-image: url(img/landscape.png);
+background-image: url(../../img/landscape.png);
 background-size: cover;
       }
 </style>
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed">
+<body class="nav-fixed fullcontent">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top quarto-banner">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">My Awesome CSCI 0451 Blog</span>
     </a>
   </div>
@@ -167,7 +141,7 @@ window.Quarto = {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
+    <a class="nav-link" href="../../about.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item compact">
@@ -190,13 +164,13 @@ window.Quarto = {
 <!-- content -->
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">CSCI 0451 Blog</h1>
+    <div class="quarto-title column-body">
+      <h1 class="title">Sparse Kernel Machines</h1>
                       </div>
   </div>
     
   
-  <div class="quarto-title-meta column-page-left">
+  <div class="quarto-title-meta">
 
       
     
@@ -204,208 +178,105 @@ window.Quarto = {
     </div>
     
   
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(8)</span></div></div></div>
+    
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content quarto-banner-title-block" id="quarto-document-content">
 
 
 
 
 
+<div id="1a198c90" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> kernel <span class="im">import</span> KernelLogisticRegression</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="abstract" class="level2">
+<h2 class="anchored" data-anchor-id="abstract">Abstract</h2>
+</section>
+<section id="generate-data" class="level2">
+<h2 class="anchored" data-anchor-id="generate-data">Generate Data</h2>
+<div id="54098fd4" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib <span class="im">import</span> pyplot <span class="im">as</span> plt</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>plt.style.use(<span class="st">'seaborn-v0_8-whitegrid'</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> classification_data(n_points <span class="op">=</span> <span class="dv">300</span>, noise <span class="op">=</span> <span class="fl">0.2</span>, p_dims <span class="op">=</span> <span class="dv">2</span>):</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> torch.arange(n_points) <span class="op">&gt;=</span> <span class="bu">int</span>(n_points<span class="op">/</span><span class="dv">2</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> <span class="fl">1.0</span><span class="op">*</span>y</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> y[:, <span class="va">None</span>] <span class="op">+</span> torch.normal(<span class="fl">0.0</span>, noise, size <span class="op">=</span> (n_points,p_dims))</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># X = torch.cat((X, torch.ones((X.shape[0], 1))), 1)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> X <span class="op">-</span> X.mean(dim <span class="op">=</span> <span class="dv">0</span>, keepdim <span class="op">=</span> <span class="va">True</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> X, y</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_classification_data(X, y, ax):</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> X.shape[<span class="dv">1</span>] <span class="op">==</span> <span class="dv">2</span>, <span class="st">"This function only works for data created with p_dims == 2"</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    targets <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">1</span>]</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    markers <span class="op">=</span> [<span class="st">"o"</span> , <span class="st">","</span>]</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">2</span>):</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        ix <span class="op">=</span> y <span class="op">==</span> targets[i]</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        ax.scatter(X[ix,<span class="dv">0</span>], X[ix,<span class="dv">1</span>], s <span class="op">=</span> <span class="dv">20</span>,  c <span class="op">=</span> y[ix], facecolors <span class="op">=</span> <span class="st">"none"</span>, edgecolors <span class="op">=</span> <span class="st">"darkgrey"</span>, cmap <span class="op">=</span> <span class="st">"BrBG"</span>, vmin <span class="op">=</span> <span class="op">-</span><span class="dv">1</span>, vmax <span class="op">=</span> <span class="dv">2</span>, alpha <span class="op">=</span> <span class="fl">0.8</span>, marker <span class="op">=</span> markers[i])</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    ax.<span class="bu">set</span>(xlabel <span class="op">=</span> <span class="vs">r"$x_1$"</span>, ylabel <span class="op">=</span> <span class="vs">r"$x_2$"</span>)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> classification_data(n_points <span class="op">=</span> <span class="dv">100</span>, noise <span class="op">=</span> <span class="fl">0.4</span>)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>plot_classification_data(X, y, ax)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="spase_kernel_machine_files/figure-html/cell-3-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="f192966a" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rbf_kernel(X_1, X_2, gamma):</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> torch.exp(<span class="op">-</span>gamma<span class="op">*</span>torch.cdist(X_1, X_2)<span class="op">**</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="928c939f" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>KR <span class="op">=</span> KernelLogisticRegression(rbf_kernel, lam <span class="op">=</span> <span class="fl">0.1</span>, gamma <span class="op">=</span> <span class="dv">1</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>KR.fit(X, y, m_epochs <span class="op">=</span> <span class="dv">500000</span>, lr <span class="op">=</span> <span class="fl">0.0001</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="7">
+<pre><code>&lt;kernel.KernelLogisticRegression at 0x16ad402b0&gt;</code></pre>
+</div>
+</div>
+<div id="5a23938e" class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="fl">1.0</span><span class="op">*</span>(KR.a <span class="op">&gt;</span> <span class="fl">0.001</span>)).mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="9a1ea465" class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ix <span class="op">=</span> torch.<span class="bu">abs</span>(KR.a) <span class="op">&gt;</span> <span class="fl">0.001</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>x1 <span class="op">=</span> torch.linspace(X[:,<span class="dv">0</span>].<span class="bu">min</span>() <span class="op">-</span> <span class="fl">0.2</span>, X[:,<span class="dv">0</span>].<span class="bu">max</span>() <span class="op">+</span> <span class="fl">0.2</span>, <span class="dv">101</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>x2 <span class="op">=</span> torch.linspace(X[:,<span class="dv">1</span>].<span class="bu">min</span>() <span class="op">-</span> <span class="fl">0.2</span>, X[:,<span class="dv">1</span>].<span class="bu">max</span>() <span class="op">+</span> <span class="fl">0.2</span>, <span class="dv">101</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>X1, X2 <span class="op">=</span> torch.meshgrid(x1, x2, indexing<span class="op">=</span><span class="st">'ij'</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>x1 <span class="op">=</span> X1.ravel()</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>x2 <span class="op">=</span> X2.ravel()</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>X_ <span class="op">=</span> torch.stack((x1, x2), dim <span class="op">=</span> <span class="dv">1</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>preds <span class="op">=</span> KR.score(X_, recompute_kernel <span class="op">=</span> <span class="va">True</span>)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>preds <span class="op">=</span> <span class="fl">1.0</span><span class="op">*</span>torch.reshape(preds, X1.size())</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>ax.contourf(X1, X2, preds, origin <span class="op">=</span> <span class="st">"lower"</span>, cmap <span class="op">=</span> <span class="st">"BrBG"</span>, </span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>vmin <span class="op">=</span> <span class="dv">2</span><span class="op">*</span>preds.<span class="bu">min</span>() <span class="op">-</span> preds.<span class="bu">max</span>(), vmax <span class="op">=</span> <span class="dv">2</span><span class="op">*</span>preds.<span class="bu">max</span>() <span class="op">-</span> preds.<span class="bu">min</span>()</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>plot_classification_data(X, y, ax)</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>plt.scatter(X[ix, <span class="dv">0</span>],X[ix, <span class="dv">1</span>], facecolors <span class="op">=</span> <span class="st">"none"</span>, edgecolors <span class="op">=</span> <span class="st">"black"</span>)</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="co"># ax.scatter(X[ix, 0],X[ix, 1], facecolors = "none", edgecolors = "black")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 
 
+</section>
 
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-listing-file-modified-sort="1745148327043" data-listing-reading-time-sort="5" data-listing-word-count-sort="927">
-<div class="thumbnail">
-<p><a href="./posts/Overfitting_Overparameterization_and_Double-Descent/overfitting.html" class="no-external"></a></p><a href="./posts/Overfitting_Overparameterization_and_Double-Descent/overfitting.html" class="no-external">
-<p class="card-img-top"><img src="posts/Overfitting_Overparameterization_and_Double-Descent/overfitting_files/figure-html/cell-8-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/Overfitting_Overparameterization_and_Double-Descent/overfitting.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/Overfitting_Overparameterization_and_Double-Descent/overfitting.html" class="no-external">Overfitting, Overparameterization, and Double-Descent</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/Overfitting_Overparameterization_and_Double-Descent/overfitting.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/Overfitting_Overparameterization_and_Double-Descent/overfitting.html" class="no-external">This notebook explores the phenomenon of double descent in machine learning, where test error decreases, then increases, and finally decreases again as model complexity…</a>
-</div>
-</div>
-<div class="metadata">
-<p><a href="./posts/Overfitting_Overparameterization_and_Double-Descent/overfitting.html" class="no-external"></a></p><a href="./posts/Overfitting_Overparameterization_and_Double-Descent/overfitting.html" class="no-external">
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-listing-file-modified-sort="1744235825121" data-listing-reading-time-sort="5" data-listing-word-count-sort="878">
-<div class="thumbnail">
-<p><a href="./posts/Implementing_Logistic_Regression/logistic_regression.html" class="no-external"></a></p><a href="./posts/Implementing_Logistic_Regression/logistic_regression.html" class="no-external">
-<p class="card-img-top"><img src="posts/Implementing_Logistic_Regression/logistic_regression_files/figure-html/cell-4-output-2.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/Implementing_Logistic_Regression/logistic_regression.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/Implementing_Logistic_Regression/logistic_regression.html" class="no-external">Implementing Logistic Regression</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/Implementing_Logistic_Regression/logistic_regression.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/Implementing_Logistic_Regression/logistic_regression.html" class="no-external">The complete logistic regression implementation can be found in my Github repository.</a>
-</div>
-</div>
-<div class="metadata">
-<p><a href="./posts/Implementing_Logistic_Regression/logistic_regression.html" class="no-external"></a></p><a href="./posts/Implementing_Logistic_Regression/logistic_regression.html" class="no-external">
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-listing-file-modified-sort="1741234690638" data-listing-reading-time-sort="9" data-listing-word-count-sort="1650">
-<div class="thumbnail">
-<p><a href="./posts/Design_and_Impact_of_Automated_Decision_Systems/Design_and_Impact_of_Automated_Decision_Systems.html" class="no-external"></a></p><a href="./posts/Design_and_Impact_of_Automated_Decision_Systems/Design_and_Impact_of_Automated_Decision_Systems.html" class="no-external">
-<p class="card-img-top"><img src="posts/Design_and_Impact_of_Automated_Decision_Systems/Design_and_Impact_of_Automated_Decision_Systems_files/figure-html/cell-4-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/Design_and_Impact_of_Automated_Decision_Systems/Design_and_Impact_of_Automated_Decision_Systems.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/Design_and_Impact_of_Automated_Decision_Systems/Design_and_Impact_of_Automated_Decision_Systems.html" class="no-external">Design and Impact of Automated Decision Systems</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/Design_and_Impact_of_Automated_Decision_Systems/Design_and_Impact_of_Automated_Decision_Systems.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/Design_and_Impact_of_Automated_Decision_Systems/Design_and_Impact_of_Automated_Decision_Systems.html" class="no-external">This study explores the dynamics of automated decision systems in the bank industry, examining how algorithmic decisions impact both banks and borrowers. Using a dataset of…</a>
-</div>
-</div>
-<div class="metadata">
-<p><a href="./posts/Design_and_Impact_of_Automated_Decision_Systems/Design_and_Impact_of_Automated_Decision_Systems.html" class="no-external"></a></p><a href="./posts/Design_and_Impact_of_Automated_Decision_Systems/Design_and_Impact_of_Automated_Decision_Systems.html" class="no-external">
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-listing-file-modified-sort="1743620382488" data-listing-reading-time-sort="5" data-listing-word-count-sort="990">
-<div class="thumbnail">
-<p><a href="./posts/Implementing_the_Perceptron_Algorithm/perceptron.html" class="no-external"></a></p><a href="./posts/Implementing_the_Perceptron_Algorithm/perceptron.html" class="no-external">
-<p class="card-img-top"><img src="posts/Implementing_the_Perceptron_Algorithm/perceptron_files/figure-html/cell-4-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/Implementing_the_Perceptron_Algorithm/perceptron.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/Implementing_the_Perceptron_Algorithm/perceptron.html" class="no-external">Implementing the Perceptron Algorithm</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/Implementing_the_Perceptron_Algorithm/perceptron.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/Implementing_the_Perceptron_Algorithm/perceptron.html" class="no-external">The complete perceptron implementation can be found in my Github repository.</a>
-</div>
-</div>
-<div class="metadata">
-<p><a href="./posts/Implementing_the_Perceptron_Algorithm/perceptron.html" class="no-external"></a></p><a href="./posts/Implementing_the_Perceptron_Algorithm/perceptron.html" class="no-external">
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="4" data-listing-file-modified-sort="1742427147901" data-listing-reading-time-sort="11" data-listing-word-count-sort="2060">
-<div class="thumbnail">
-<p><a href="./posts/Limits_of_the_Quantitative_Approach_to_Bias_and_Fairness/Limits of the Quantitative Approach to Bias and Fairness.html" class="no-external"></a></p><a href="./posts/Limits_of_the_Quantitative_Approach_to_Bias_and_Fairness/Limits of the Quantitative Approach to Bias and Fairness.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/Limits_of_the_Quantitative_Approach_to_Bias_and_Fairness/Limits of the Quantitative Approach to Bias and Fairness.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/Limits_of_the_Quantitative_Approach_to_Bias_and_Fairness/Limits of the Quantitative Approach to Bias and Fairness.html" class="no-external">Limits of the Quantitative Approach to Bias and Fairness</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/Limits_of_the_Quantitative_Approach_to_Bias_and_Fairness/Limits of the Quantitative Approach to Bias and Fairness.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/Limits_of_the_Quantitative_Approach_to_Bias_and_Fairness/Limits of the Quantitative Approach to Bias and Fairness.html" class="no-external">In a thought-provoking 2022 speech at Princeton University, Arvind Narayanan asserted that “currently quantitative methods are primarily used to justify the status quo. I…<span class="citation" data-cites="narayanan2022limits"></span></a>
-</div>
-</div>
-<div class="metadata">
-<p><a href="./posts/Limits_of_the_Quantitative_Approach_to_Bias_and_Fairness/Limits of the Quantitative Approach to Bias and Fairness.html" class="no-external"></a></p><a href="./posts/Limits_of_the_Quantitative_Approach_to_Bias_and_Fairness/Limits of the Quantitative Approach to Bias and Fairness.html" class="no-external">
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="5" data-listing-file-modified-sort="1742428032600" data-listing-reading-time-sort="6" data-listing-word-count-sort="1088">
-<div class="thumbnail">
-<p><a href="./posts/Classifying_Palmer_Penguins/Classifying_Palmer_Penguins.html" class="no-external"></a></p><a href="./posts/Classifying_Palmer_Penguins/Classifying_Palmer_Penguins.html" class="no-external">
-<p class="card-img-top"><img src="posts/Classifying_Palmer_Penguins/Classifying_Palmer_Penguins_files/figure-html/cell-5-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/Classifying_Palmer_Penguins/Classifying_Palmer_Penguins.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/Classifying_Palmer_Penguins/Classifying_Palmer_Penguins.html" class="no-external">Classifying Palmer Penguins</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/Classifying_Palmer_Penguins/Classifying_Palmer_Penguins.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/Classifying_Palmer_Penguins/Classifying_Palmer_Penguins.html" class="no-external">This analysis explores the Palmer Penguins dataset to develop a robust classification model that can accurately identify penguin species based on physical characteristics.…</a>
-</div>
-</div>
-<div class="metadata">
-<p><a href="./posts/Classifying_Palmer_Penguins/Classifying_Palmer_Penguins.html" class="no-external"></a></p><a href="./posts/Classifying_Palmer_Penguins/Classifying_Palmer_Penguins.html" class="no-external">
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="6" data-listing-file-modified-sort="1742949258856" data-listing-reading-time-sort="7" data-listing-word-count-sort="1399">
-<div class="thumbnail">
-<p><a href="./posts/Replication_Study/Replication_Study.html" class="no-external"></a></p><a href="./posts/Replication_Study/Replication_Study.html" class="no-external">
-<p class="card-img-top"><img src="posts/Replication_Study/Replication_Study_files/figure-html/cell-3-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/Replication_Study/Replication_Study.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/Replication_Study/Replication_Study.html" class="no-external">Replication Study: Dissecting racial bias in an algorithm used to manage the health of populations</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/Replication_Study/Replication_Study.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/Replication_Study/Replication_Study.html" class="no-external">This analysis explores the racial bias present in a healthcare algorithm that disproportionately affected Black patients by underestimating their healthcare needs. By…</a>
-</div>
-</div>
-<div class="metadata">
-<p><a href="./posts/Replication_Study/Replication_Study.html" class="no-external"></a></p><a href="./posts/Replication_Study/Replication_Study.html" class="no-external">
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="7" data-listing-file-modified-sort="1744691102932" data-listing-reading-time-sort="1" data-listing-word-count-sort="3">
-<div class="thumbnail">
-<p><a href="./posts/Sparse_Kernel_Machines/spase_kernel_machine.html" class="no-external"></a></p><a href="./posts/Sparse_Kernel_Machines/spase_kernel_machine.html" class="no-external">
-<p class="card-img-top"><img src="posts/Sparse_Kernel_Machines/spase_kernel_machine_files/figure-html/cell-3-output-1.png"  class="thumbnail-image card-img"/></p>
-</a><p><a href="./posts/Sparse_Kernel_Machines/spase_kernel_machine.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/Sparse_Kernel_Machines/spase_kernel_machine.html" class="no-external">Sparse Kernel Machines</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/Sparse_Kernel_Machines/spase_kernel_machine.html" class="no-external"></a>
-</div>
-<div class="listing-description">
-<a href="./posts/Sparse_Kernel_Machines/spase_kernel_machine.html" class="no-external">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><span class="im">from</span> kernel <span class="im">import</span> KernelLogisticRegression</span></code></pre></div>
-</a>
-</div>
-</div>
-<div class="metadata">
-<p><a href="./posts/Sparse_Kernel_Machines/spase_kernel_machine.html" class="no-external"></a></p><a href="./posts/Sparse_Kernel_Machines/spase_kernel_machine.html" class="no-external">
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div></main> <!-- /main -->
+</main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {
