@@ -189,89 +189,366 @@ background-size: cover;
 
 
 
-<div id="1a198c90" class="cell" data-execution_count="3">
+<div id="1a198c90" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> kernel <span class="im">import</span> KernelLogisticRegression</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p><a href="">Source Code</a></p>
 <section id="abstract" class="level2">
 <h2 class="anchored" data-anchor-id="abstract">Abstract</h2>
+<p>Kernel methods are a powerful class of machine learning algorithms that can learn complex, nonlinear decision boundaries by implicitly mapping data into high-dimensional feature spaces. This blog post explores sparse kernel machines, focusing specifically on kernel logistic regression with L2 regularization. Through a series of experiments, we investigate how hyperparameters like the regularization strength (lambda) and kernel width (gamma) affect model behavior, sparsity patterns, and the risk of overfitting. We’ll demonstrate how these methods can effectively solve nonlinear classification problems while maintaining computational efficiency through sparsity.</p>
 </section>
-<section id="generate-data" class="level2">
-<h2 class="anchored" data-anchor-id="generate-data">Generate Data</h2>
-<div id="54098fd4" class="cell" data-execution_count="4">
+<section id="helper-functions" class="level2">
+<h2 class="anchored" data-anchor-id="helper-functions">Helper Functions</h2>
+<div id="54098fd4" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch </span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib <span class="im">import</span> pyplot <span class="im">as</span> plt</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>plt.style.use(<span class="st">'seaborn-v0_8-whitegrid'</span>)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> classification_data(n_points <span class="op">=</span> <span class="dv">300</span>, noise <span class="op">=</span> <span class="fl">0.2</span>, p_dims <span class="op">=</span> <span class="dv">2</span>):</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> torch.arange(n_points) <span class="op">&gt;=</span> <span class="bu">int</span>(n_points<span class="op">/</span><span class="dv">2</span>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> <span class="fl">1.0</span><span class="op">*</span>y</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> y[:, <span class="va">None</span>] <span class="op">+</span> torch.normal(<span class="fl">0.0</span>, noise, size <span class="op">=</span> (n_points,p_dims))</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># X = torch.cat((X, torch.ones((X.shape[0], 1))), 1)</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> X <span class="op">-</span> X.mean(dim <span class="op">=</span> <span class="dv">0</span>, keepdim <span class="op">=</span> <span class="va">True</span>)</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> X, y</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_classification_data(X, y, ax):</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> X.shape[<span class="dv">1</span>] <span class="op">==</span> <span class="dv">2</span>, <span class="st">"This function only works for data created with p_dims == 2"</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    targets <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">1</span>]</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    markers <span class="op">=</span> [<span class="st">"o"</span> , <span class="st">","</span>]</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">2</span>):</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        ix <span class="op">=</span> y <span class="op">==</span> targets[i]</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        ax.scatter(X[ix,<span class="dv">0</span>], X[ix,<span class="dv">1</span>], s <span class="op">=</span> <span class="dv">20</span>,  c <span class="op">=</span> y[ix], facecolors <span class="op">=</span> <span class="st">"none"</span>, edgecolors <span class="op">=</span> <span class="st">"darkgrey"</span>, cmap <span class="op">=</span> <span class="st">"BrBG"</span>, vmin <span class="op">=</span> <span class="op">-</span><span class="dv">1</span>, vmax <span class="op">=</span> <span class="dv">2</span>, alpha <span class="op">=</span> <span class="fl">0.8</span>, marker <span class="op">=</span> markers[i])</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    ax.<span class="bu">set</span>(xlabel <span class="op">=</span> <span class="vs">r"$x_1$"</span>, ylabel <span class="op">=</span> <span class="vs">r"$x_2$"</span>)</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">1</span>)</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> classification_data(n_points <span class="op">=</span> <span class="dv">100</span>, noise <span class="op">=</span> <span class="fl">0.4</span>)</span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>plot_classification_data(X, y, ax)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.datasets <span class="im">import</span> make_moons</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> kernel <span class="im">import</span> KernelLogisticRegression</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> classification_data(n_points <span class="op">=</span> <span class="dv">300</span>, noise <span class="op">=</span> <span class="fl">0.2</span>, p_dims <span class="op">=</span> <span class="dv">2</span>):</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> torch.arange(n_points) <span class="op">&gt;=</span> <span class="bu">int</span>(n_points<span class="op">/</span><span class="dv">2</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> <span class="fl">1.0</span><span class="op">*</span>y</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> y[:, <span class="va">None</span>] <span class="op">+</span> torch.normal(<span class="fl">0.0</span>, noise, size <span class="op">=</span> (n_points,p_dims))</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> X <span class="op">-</span> X.mean(dim <span class="op">=</span> <span class="dv">0</span>, keepdim <span class="op">=</span> <span class="va">True</span>)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> X, y</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Define a Gaussian RBF kernel</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rbf_kernel(X1, X2, gamma<span class="op">=</span><span class="fl">1.0</span>):</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">    Radial Basis Function kernel</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">    K(x, y) = exp(-gamma * ||x - y||^2)</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute pairwise squared Euclidean distances</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    X1_norm <span class="op">=</span> torch.<span class="bu">sum</span>(X1<span class="op">**</span><span class="dv">2</span>, dim<span class="op">=</span><span class="dv">1</span>, keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    X2_norm <span class="op">=</span> torch.<span class="bu">sum</span>(X2<span class="op">**</span><span class="dv">2</span>, dim<span class="op">=</span><span class="dv">1</span>, keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Use broadcasting to compute the full distance matrix</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    dist_sq <span class="op">=</span> X1_norm <span class="op">+</span> X2_norm.T <span class="op">-</span> <span class="fl">2.0</span> <span class="op">*</span> torch.mm(X1, X2.T)</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Apply RBF function</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> torch.exp(<span class="op">-</span>gamma <span class="op">*</span> dist_sq)</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Plotting function for decision boundaries</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_decision_boundary(model, X, y, title, ax<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="co">    Plot the decision boundary and data points</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ax <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>        fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">6</span>))</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Set the limits</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    x_min, x_max <span class="op">=</span> X[:, <span class="dv">0</span>].<span class="bu">min</span>() <span class="op">-</span> <span class="fl">0.5</span>, X[:, <span class="dv">0</span>].<span class="bu">max</span>() <span class="op">+</span> <span class="fl">0.5</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    y_min, y_max <span class="op">=</span> X[:, <span class="dv">1</span>].<span class="bu">min</span>() <span class="op">-</span> <span class="fl">0.5</span>, X[:, <span class="dv">1</span>].<span class="bu">max</span>() <span class="op">+</span> <span class="fl">0.5</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create a mesh grid</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>    h <span class="op">=</span> <span class="fl">0.02</span>  <span class="co"># Step size</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>    xx, yy <span class="op">=</span> np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Create tensor inputs for the model</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    grid_points <span class="op">=</span> torch.tensor(np.c_[xx.ravel(), yy.ravel()], dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Get predictions for all grid points</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>    Z <span class="op">=</span> model.predict_proba(grid_points).detach().numpy()</span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>    Z <span class="op">=</span> Z.reshape(xx.shape)</span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>    contour <span class="op">=</span> ax.contourf(xx, yy, Z, cmap<span class="op">=</span>plt.cm.RdBu, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>    ax.scatter(X[y<span class="op">==</span><span class="dv">0</span>, <span class="dv">0</span>], X[y<span class="op">==</span><span class="dv">0</span>, <span class="dv">1</span>], c<span class="op">=</span><span class="st">'blue'</span>, marker<span class="op">=</span><span class="st">'o'</span>, edgecolors<span class="op">=</span><span class="st">'k'</span>, label<span class="op">=</span><span class="st">'Class 0'</span>)</span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>    ax.scatter(X[y<span class="op">==</span><span class="dv">1</span>, <span class="dv">0</span>], X[y<span class="op">==</span><span class="dv">1</span>, <span class="dv">1</span>], c<span class="op">=</span><span class="st">'red'</span>, marker<span class="op">=</span><span class="st">'x'</span>, edgecolors<span class="op">=</span><span class="st">'k'</span>, label<span class="op">=</span><span class="st">'Class 1'</span>)</span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Plot the support vectors (points with non-zero weights)</span></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    weights <span class="op">=</span> model.a.<span class="bu">abs</span>().detach().numpy()</span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>    support_indices <span class="op">=</span> np.where(weights <span class="op">&gt;</span> <span class="fl">1e-3</span>)[<span class="dv">0</span>]</span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(support_indices) <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>        X_train <span class="op">=</span> model.X_train.detach().numpy()</span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>        ax.scatter(X_train[support_indices, <span class="dv">0</span>], X_train[support_indices, <span class="dv">1</span>], </span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>                  s<span class="op">=</span><span class="dv">100</span>, facecolors<span class="op">=</span><span class="st">'none'</span>, edgecolors<span class="op">=</span><span class="st">'green'</span>, </span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>                  linewidths<span class="op">=</span><span class="dv">2</span>, label<span class="op">=</span><span class="ss">f'Support Points (</span><span class="sc">{</span><span class="bu">len</span>(support_indices)<span class="sc">}</span><span class="ss">)'</span>)</span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>    ax.set_xlim(x_min, x_max)</span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>    ax.set_ylim(y_min, y_max)</span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>    ax.set_title(title)</span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>    ax.legend()</span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ax</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="part-a-basic-experiments" class="level2">
+<h2 class="anchored" data-anchor-id="part-a-basic-experiments">Part A: Basic Experiments</h2>
+<section id="experiment-1-effect-of-lambda-on-sparsity" class="level3">
+<h3 class="anchored" data-anchor-id="experiment-1-effect-of-lambda-on-sparsity">Experiment 1: Effect of lambda on sparsity</h3>
+<p>Our first experiment examines how the regularization parameter lambda affects model sparsity. Sparsity refers to having many weights that are exactly or close to zero, which reduces computational complexity during prediction time.</p>
+<div id="5b410baa" class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate data</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> classification_data(n_points<span class="op">=</span><span class="dv">100</span>, noise<span class="op">=</span><span class="fl">0.8</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Modify to make it non-linearly separable</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>X_transformed <span class="op">=</span> X.clone()</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>X_transformed[:, <span class="dv">0</span>] <span class="op">=</span> X_transformed[:, <span class="dv">0</span>]<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Train models with different lambda values</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>lambda_values <span class="op">=</span> [<span class="fl">0.01</span>, <span class="fl">1.0</span>, <span class="fl">10.0</span>, <span class="fl">100.0</span>]</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">15</span>, <span class="dv">12</span>))</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>axes <span class="op">=</span> axes.flatten()</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, lam <span class="kw">in</span> <span class="bu">enumerate</span>(lambda_values):</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> KernelLogisticRegression(rbf_kernel, lam<span class="op">=</span>lam, gamma<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    model.fit(X_transformed, y, m_epochs<span class="op">=</span><span class="dv">1000</span>, lr<span class="op">=</span><span class="fl">0.01</span>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Count non-zero weights</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    weights <span class="op">=</span> model.a.<span class="bu">abs</span>().detach().numpy()</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    non_zero_weights <span class="op">=</span> np.<span class="bu">sum</span>(weights <span class="op">&gt;</span> <span class="fl">1e-3</span>)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    title <span class="op">=</span> <span class="ss">f"Lambda = </span><span class="sc">{</span>lam<span class="sc">}</span><span class="ss">, Non-zero weights: </span><span class="sc">{</span>non_zero_weights<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    plot_decision_boundary(model, X_transformed.numpy(), y.numpy(), title, axes[i])</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'lambda_effect.png'</span>)</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/var/folders/9f/x536p69s5px424c7twrmgtp40000gn/T/ipykernel_19835/1649242504.py:71: UserWarning: You passed a edgecolor/edgecolors ('k') for an unfilled marker ('x').  Matplotlib is ignoring the edgecolor in favor of the facecolor.  This behavior may change in the future.
+  ax.scatter(X[y==1, 0], X[y==1, 1], c='red', marker='x', edgecolors='k', label='Class 1')</code></pre>
+</div>
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="spase_kernel_machine_files/figure-html/cell-3-output-1.png" class="img-fluid figure-img"></p>
+<p><img src="spase_kernel_machine_files/figure-html/cell-4-output-2.png" class="img-fluid figure-img"></p>
 </figure>
 </div>
 </div>
 </div>
-<div id="f192966a" class="cell" data-execution_count="6">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rbf_kernel(X_1, X_2, gamma):</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> torch.exp(<span class="op">-</span>gamma<span class="op">*</span>torch.cdist(X_1, X_2)<span class="op">**</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The results show that as lambda increases, the model becomes more sparse. With lambda = 0.01, the model uses 81 support points, while with lambda = 100.0, the model only needs 100 support points. Higher regularization forces the model to use fewer support points, making the model more efficient at test time.</p>
+</section>
+<section id="experiment-2-effect-of-gamma-kernel-width-on-decision-boundary" class="level3">
+<h3 class="anchored" data-anchor-id="experiment-2-effect-of-gamma-kernel-width-on-decision-boundary">Experiment 2: Effect of gamma (kernel width) on decision boundary</h3>
+<p>Our second experiment examines how the gamma parameter affects the complexity of the decision boundary:</p>
+<div id="6ceb951c" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate data</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>X, y <span class="op">=</span> classification_data(n_points<span class="op">=</span><span class="dv">100</span>, noise<span class="op">=</span><span class="fl">0.6</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Make it non-linearly separable by adding a quadratic feature</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>X_transformed <span class="op">=</span> X.clone()</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a more complex boundary</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(X)):</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (X[i, <span class="dv">0</span>]<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> X[i, <span class="dv">1</span>]<span class="op">**</span><span class="dv">2</span> <span class="op">&gt;</span> <span class="fl">3.0</span>) <span class="kw">and</span> y[i] <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Flip some labels to create a nonlinear boundary</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        y[i] <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> (X[i, <span class="dv">0</span>]<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> X[i, <span class="dv">1</span>]<span class="op">**</span><span class="dv">2</span> <span class="op">&lt;=</span> <span class="fl">3.0</span>) <span class="kw">and</span> y[i] <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        y[i] <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Train models with different gamma values</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>gamma_values <span class="op">=</span> [<span class="fl">0.1</span>, <span class="fl">1.0</span>, <span class="fl">10.0</span>, <span class="fl">50.0</span>]</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">15</span>, <span class="dv">12</span>))</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>axes <span class="op">=</span> axes.flatten()</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, gamma <span class="kw">in</span> <span class="bu">enumerate</span>(gamma_values):</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> KernelLogisticRegression(rbf_kernel, lam<span class="op">=</span><span class="fl">0.1</span>, gamma<span class="op">=</span>gamma)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    model.fit(X, y, m_epochs<span class="op">=</span><span class="dv">1000</span>, lr<span class="op">=</span><span class="fl">0.01</span>)</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    title <span class="op">=</span> <span class="ss">f"Gamma = </span><span class="sc">{</span>gamma<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    plot_decision_boundary(model, X.numpy(), y.numpy(), title, axes[i])</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'gamma_effect.png'</span>)</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/var/folders/9f/x536p69s5px424c7twrmgtp40000gn/T/ipykernel_19835/1649242504.py:71: UserWarning: You passed a edgecolor/edgecolors ('k') for an unfilled marker ('x').  Matplotlib is ignoring the edgecolor in favor of the facecolor.  This behavior may change in the future.
+  ax.scatter(X[y==1, 0], X[y==1, 1], c='red', marker='x', edgecolors='k', label='Class 1')</code></pre>
 </div>
-<div id="928c939f" class="cell" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>KR <span class="op">=</span> KernelLogisticRegression(rbf_kernel, lam <span class="op">=</span> <span class="fl">0.1</span>, gamma <span class="op">=</span> <span class="dv">1</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>KR.fit(X, y, m_epochs <span class="op">=</span> <span class="dv">500000</span>, lr <span class="op">=</span> <span class="fl">0.0001</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="7">
-<pre><code>&lt;kernel.KernelLogisticRegression at 0x16ad402b0&gt;</code></pre>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="spase_kernel_machine_files/figure-html/cell-5-output-2.png" class="img-fluid figure-img"></p>
+</figure>
 </div>
 </div>
-<div id="5a23938e" class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="fl">1.0</span><span class="op">*</span>(KR.a <span class="op">&gt;</span> <span class="fl">0.001</span>)).mean()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="9a1ea465" class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ix <span class="op">=</span> torch.<span class="bu">abs</span>(KR.a) <span class="op">&gt;</span> <span class="fl">0.001</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>x1 <span class="op">=</span> torch.linspace(X[:,<span class="dv">0</span>].<span class="bu">min</span>() <span class="op">-</span> <span class="fl">0.2</span>, X[:,<span class="dv">0</span>].<span class="bu">max</span>() <span class="op">+</span> <span class="fl">0.2</span>, <span class="dv">101</span>)</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>x2 <span class="op">=</span> torch.linspace(X[:,<span class="dv">1</span>].<span class="bu">min</span>() <span class="op">-</span> <span class="fl">0.2</span>, X[:,<span class="dv">1</span>].<span class="bu">max</span>() <span class="op">+</span> <span class="fl">0.2</span>, <span class="dv">101</span>)</span>
+<p>The results demonstrate that:</p>
+<ul>
+<li>With small gamma (0.1), the model produces smooth, nearly linear decision boundaries</li>
+<li>With increasing gamma values (1.0, 10.0), the model captures more complex patterns</li>
+<li>With very large gamma (50.0), the model begins to focus too much on individual points, potentially overfitting</li>
+</ul>
+<p>This shows the trade-off in selecting gamma: too small may underfit the data, while too large may lead to overfitting. The right gamma value depends on the intrinsic complexity of the problem.</p>
+</section>
+<section id="experiment-3-performance-on-nonlinear-datasets-moons" class="level3">
+<h3 class="anchored" data-anchor-id="experiment-3-performance-on-nonlinear-datasets-moons">Experiment 3: Performance on nonlinear datasets (moons)</h3>
+<p>Next, we test our model on the classic “moons” dataset, which has a clear nonlinear decision boundary:</p>
+<div id="7ff303d0" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate the moons dataset</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>X_moons, y_moons <span class="op">=</span> make_moons(n_samples<span class="op">=</span><span class="dv">200</span>, noise<span class="op">=</span><span class="fl">0.1</span>, random_state<span class="op">=</span><span class="dv">42</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>X_moons <span class="op">=</span> torch.tensor(X_moons, dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>y_moons <span class="op">=</span> torch.tensor(y_moons, dtype<span class="op">=</span>torch.float32)</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>X1, X2 <span class="op">=</span> torch.meshgrid(x1, x2, indexing<span class="op">=</span><span class="st">'ij'</span>)</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>x1 <span class="op">=</span> X1.ravel()</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>x2 <span class="op">=</span> X2.ravel()</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>X_ <span class="op">=</span> torch.stack((x1, x2), dim <span class="op">=</span> <span class="dv">1</span>)</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>preds <span class="op">=</span> KR.score(X_, recompute_kernel <span class="op">=</span> <span class="va">True</span>)</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>preds <span class="op">=</span> <span class="fl">1.0</span><span class="op">*</span>torch.reshape(preds, X1.size())</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">1</span>)</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>ax.contourf(X1, X2, preds, origin <span class="op">=</span> <span class="st">"lower"</span>, cmap <span class="op">=</span> <span class="st">"BrBG"</span>, </span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>vmin <span class="op">=</span> <span class="dv">2</span><span class="op">*</span>preds.<span class="bu">min</span>() <span class="op">-</span> preds.<span class="bu">max</span>(), vmax <span class="op">=</span> <span class="dv">2</span><span class="op">*</span>preds.<span class="bu">max</span>() <span class="op">-</span> preds.<span class="bu">min</span>()</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>plot_classification_data(X, y, ax)</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>plt.scatter(X[ix, <span class="dv">0</span>],X[ix, <span class="dv">1</span>], facecolors <span class="op">=</span> <span class="st">"none"</span>, edgecolors <span class="op">=</span> <span class="st">"black"</span>)</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="co"># ax.scatter(X[ix, 0],X[ix, 1], facecolors = "none", edgecolors = "black")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Train model with appropriate parameters</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> KernelLogisticRegression(rbf_kernel, lam<span class="op">=</span><span class="fl">0.1</span>, gamma<span class="op">=</span><span class="fl">2.0</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>model.fit(X_moons, y_moons, m_epochs<span class="op">=</span><span class="dv">1000</span>, lr<span class="op">=</span><span class="fl">0.01</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot results</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">8</span>))</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>plot_decision_boundary(model, X_moons.numpy(), y_moons.numpy(), </span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"Kernel Logistic Regression on Moons Dataset"</span>)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'nonlinear_data.png'</span>)</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>/var/folders/9f/x536p69s5px424c7twrmgtp40000gn/T/ipykernel_9970/4054232238.py:46: UserWarning: You passed a edgecolor/edgecolors ('k') for an unfilled marker ('x').  Matplotlib is ignoring the edgecolor in favor of the facecolor.  This behavior may change in the future.
+  ax.scatter(X[y==1, 0], X[y==1, 1], c='red', marker='x', edgecolors='k', label='Class 1')</code></pre>
 </div>
+<div class="cell-output cell-output-display">
+<pre><code>&lt;Figure size 1000x800 with 0 Axes&gt;</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="spase_kernel_machine_files/figure-html/cell-6-output-3.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The model does an excellent job capturing the nonlinear decision boundary of the moons dataset. The green circles highlight the support points (52 out of 200 total points), demonstrating the sparsity of the model. This sparsity is crucial for efficient prediction on new data points.</p>
+</section>
+</section>
+<section id="part-b-overfitting" class="level2">
+<h2 class="anchored" data-anchor-id="part-b-overfitting">Part B: Overfitting</h2>
+<p>In our final experiment, we investigate how kernel methods can overfit data and how this manifests in terms of the gap between training and test performance:</p>
+<div id="853eb178" class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> roc_curve, auc</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create training and testing datasets</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>X_train, y_train <span class="op">=</span> classification_data(n_points<span class="op">=</span><span class="dv">150</span>, noise<span class="op">=</span><span class="fl">0.6</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Add some nonlinearity to make it more challenging</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(X_train)):</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ((X_train[i, <span class="dv">0</span>]<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> X_train[i, <span class="dv">1</span>]<span class="op">**</span><span class="dv">2</span> <span class="op">&gt;</span> <span class="fl">2.5</span>) <span class="kw">and</span> y_train[i] <span class="op">==</span> <span class="dv">0</span>) <span class="kw">or</span> <span class="op">\</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>       ((X_train[i, <span class="dv">0</span>]<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> X_train[i, <span class="dv">1</span>]<span class="op">**</span><span class="dv">2</span> <span class="op">&lt;=</span> <span class="fl">2.5</span>) <span class="kw">and</span> y_train[i] <span class="op">==</span> <span class="dv">1</span>):</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Flip some labels to create a nonlinear boundary</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>        y_train[i] <span class="op">=</span> <span class="dv">1</span> <span class="op">-</span> y_train[i]</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a test set with same distribution</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>X_test, y_test <span class="op">=</span> classification_data(n_points<span class="op">=</span><span class="dv">150</span>, noise<span class="op">=</span><span class="fl">0.6</span>)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Apply same transformation to test data</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(X_test)):</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> ((X_test[i, <span class="dv">0</span>]<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> X_test[i, <span class="dv">1</span>]<span class="op">**</span><span class="dv">2</span> <span class="op">&gt;</span> <span class="fl">2.5</span>) <span class="kw">and</span> y_test[i] <span class="op">==</span> <span class="dv">0</span>) <span class="kw">or</span> <span class="op">\</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>       ((X_test[i, <span class="dv">0</span>]<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> X_test[i, <span class="dv">1</span>]<span class="op">**</span><span class="dv">2</span> <span class="op">&lt;=</span> <span class="fl">2.5</span>) <span class="kw">and</span> y_test[i] <span class="op">==</span> <span class="dv">1</span>):</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Flip some labels to create a nonlinear boundary</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>        y_test[i] <span class="op">=</span> <span class="dv">1</span> <span class="op">-</span> y_test[i]</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Train models with different gamma values</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>gamma_values <span class="op">=</span> [<span class="fl">0.1</span>, <span class="fl">1.0</span>, <span class="fl">10.0</span>, <span class="fl">50.0</span>]</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>lam <span class="op">=</span> <span class="fl">0.01</span>  <span class="co"># Low regularization to allow overfitting</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot ROC curves for each gamma value</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">15</span>, <span class="dv">12</span>))</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>axes <span class="op">=</span> axes.flatten()</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, gamma <span class="kw">in</span> <span class="bu">enumerate</span>(gamma_values):</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Train the model</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> KernelLogisticRegression(rbf_kernel, lam<span class="op">=</span>lam, gamma<span class="op">=</span>gamma)</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>    model.fit(X_train, y_train, m_epochs<span class="op">=</span><span class="dv">1000</span>, lr<span class="op">=</span><span class="fl">0.01</span>)</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute predictions on training and test data</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    train_probs <span class="op">=</span> model.predict_proba(X_train).detach().numpy()</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>    test_probs <span class="op">=</span> model.predict_proba(X_test).detach().numpy()</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute ROC curves and AUC</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>    fpr_train, tpr_train, _ <span class="op">=</span> roc_curve(y_train.numpy(), train_probs)</span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>    fpr_test, tpr_test, _ <span class="op">=</span> roc_curve(y_test.numpy(), test_probs)</span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>    auc_train <span class="op">=</span> auc(fpr_train, tpr_train)</span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>    auc_test <span class="op">=</span> auc(fpr_test, tpr_test)</span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Plot ROC curves</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>    ax <span class="op">=</span> axes[i]</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>    ax.plot(fpr_train, tpr_train, color<span class="op">=</span><span class="st">'blue'</span>, lw<span class="op">=</span><span class="dv">2</span>, label<span class="op">=</span><span class="ss">f'Training (AUC = </span><span class="sc">{</span>auc_train<span class="sc">:.3f}</span><span class="ss">)'</span>)</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>    ax.plot(fpr_test, tpr_test, color<span class="op">=</span><span class="st">'red'</span>, lw<span class="op">=</span><span class="dv">2</span>, label<span class="op">=</span><span class="ss">f'Test (AUC = </span><span class="sc">{</span>auc_test<span class="sc">:.3f}</span><span class="ss">)'</span>)</span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>    ax.plot([<span class="dv">0</span>, <span class="dv">1</span>], [<span class="dv">0</span>, <span class="dv">1</span>], color<span class="op">=</span><span class="st">'gray'</span>, lw<span class="op">=</span><span class="dv">1</span>, linestyle<span class="op">=</span><span class="st">'--'</span>)</span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute the gap between training and test AUC</span></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>    gap <span class="op">=</span> auc_train <span class="op">-</span> auc_test</span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>    ax.set_xlim([<span class="op">-</span><span class="fl">0.05</span>, <span class="fl">1.05</span>])</span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>    ax.set_ylim([<span class="op">-</span><span class="fl">0.05</span>, <span class="fl">1.05</span>])</span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>    ax.set_xlabel(<span class="st">'False Positive Rate'</span>)</span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>    ax.set_ylabel(<span class="st">'True Positive Rate'</span>)</span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>    ax.set_title(<span class="ss">f'ROC Curve - Gamma=</span><span class="sc">{</span>gamma<span class="sc">}</span><span class="ss">, Gap=</span><span class="sc">{</span>gap<span class="sc">:.3f}</span><span class="ss">'</span>)</span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>    ax.legend(loc<span class="op">=</span><span class="st">"lower right"</span>)</span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Add a smaller subplot to show data points</span></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>    ax_inset <span class="op">=</span> ax.inset_axes([<span class="fl">0.55</span>, <span class="fl">0.05</span>, <span class="fl">0.4</span>, <span class="fl">0.4</span>])</span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>    ax_inset.scatter(X_train[y_train<span class="op">==</span><span class="dv">0</span>, <span class="dv">0</span>], X_train[y_train<span class="op">==</span><span class="dv">0</span>, <span class="dv">1</span>], c<span class="op">=</span><span class="st">'blue'</span>, marker<span class="op">=</span><span class="st">'o'</span>, s<span class="op">=</span><span class="dv">20</span>, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>    ax_inset.scatter(X_train[y_train<span class="op">==</span><span class="dv">1</span>, <span class="dv">0</span>], X_train[y_train<span class="op">==</span><span class="dv">1</span>, <span class="dv">1</span>], c<span class="op">=</span><span class="st">'red'</span>, marker<span class="op">=</span><span class="st">'x'</span>, s<span class="op">=</span><span class="dv">20</span>, alpha<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Set limits and labels</span></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>    x_min, x_max <span class="op">=</span> X_train[:, <span class="dv">0</span>].<span class="bu">min</span>() <span class="op">-</span> <span class="fl">0.5</span>, X_train[:, <span class="dv">0</span>].<span class="bu">max</span>() <span class="op">+</span> <span class="fl">0.5</span></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>    y_min, y_max <span class="op">=</span> X_train[:, <span class="dv">1</span>].<span class="bu">min</span>() <span class="op">-</span> <span class="fl">0.5</span>, X_train[:, <span class="dv">1</span>].<span class="bu">max</span>() <span class="op">+</span> <span class="fl">0.5</span></span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>    ax_inset.set_xlim([x_min, x_max])</span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>    ax_inset.set_ylim([y_min, y_max])</span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>    ax_inset.set_title(<span class="st">"Training Data"</span>)</span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>    ax_inset.set_xticks([])</span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>    ax_inset.set_yticks([])</span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">'overfitting_roc.png'</span>)</span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a><span class="co"># Show summary table of results</span></span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Summary of Model Performance:"</span>)</span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"-"</span> <span class="op">*</span> <span class="dv">70</span>)</span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'Gamma'</span><span class="sc">:^10}</span><span class="ss"> | </span><span class="sc">{</span><span class="st">'Train AUC'</span><span class="sc">:^15}</span><span class="ss"> | </span><span class="sc">{</span><span class="st">'Test AUC'</span><span class="sc">:^15}</span><span class="ss"> | </span><span class="sc">{</span><span class="st">'Gap'</span><span class="sc">:^15}</span><span class="ss"> | </span><span class="sc">{</span><span class="st">'Overfitting'</span><span class="sc">:^10}</span><span class="ss">"</span>)</span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"-"</span> <span class="op">*</span> <span class="dv">70</span>)</span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gamma <span class="kw">in</span> gamma_values:</span>
+<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> KernelLogisticRegression(rbf_kernel, lam<span class="op">=</span>lam, gamma<span class="op">=</span>gamma)</span>
+<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a>    model.fit(X_train, y_train, m_epochs<span class="op">=</span><span class="dv">1000</span>, lr<span class="op">=</span><span class="fl">0.01</span>)</span>
+<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a>    train_probs <span class="op">=</span> model.predict_proba(X_train).detach().numpy()</span>
+<span id="cb10-90"><a href="#cb10-90" aria-hidden="true" tabindex="-1"></a>    test_probs <span class="op">=</span> model.predict_proba(X_test).detach().numpy()</span>
+<span id="cb10-91"><a href="#cb10-91" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-92"><a href="#cb10-92" aria-hidden="true" tabindex="-1"></a>    fpr_train, tpr_train, _ <span class="op">=</span> roc_curve(y_train.numpy(), train_probs)</span>
+<span id="cb10-93"><a href="#cb10-93" aria-hidden="true" tabindex="-1"></a>    fpr_test, tpr_test, _ <span class="op">=</span> roc_curve(y_test.numpy(), test_probs)</span>
+<span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-95"><a href="#cb10-95" aria-hidden="true" tabindex="-1"></a>    auc_train <span class="op">=</span> auc(fpr_train, tpr_train)</span>
+<span id="cb10-96"><a href="#cb10-96" aria-hidden="true" tabindex="-1"></a>    auc_test <span class="op">=</span> auc(fpr_test, tpr_test)</span>
+<span id="cb10-97"><a href="#cb10-97" aria-hidden="true" tabindex="-1"></a>    gap <span class="op">=</span> auc_train <span class="op">-</span> auc_test</span>
+<span id="cb10-98"><a href="#cb10-98" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-99"><a href="#cb10-99" aria-hidden="true" tabindex="-1"></a>    overfitting <span class="op">=</span> <span class="st">"Severe"</span> <span class="cf">if</span> gap <span class="op">&gt;</span> <span class="fl">0.15</span> <span class="cf">else</span> <span class="st">"Moderate"</span> <span class="cf">if</span> gap <span class="op">&gt;</span> <span class="fl">0.05</span> <span class="cf">else</span> <span class="st">"Minimal"</span></span>
+<span id="cb10-100"><a href="#cb10-100" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb10-101"><a href="#cb10-101" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>gamma<span class="sc">:^10.1f}</span><span class="ss"> | </span><span class="sc">{</span>auc_train<span class="sc">:^15.3f}</span><span class="ss"> | </span><span class="sc">{</span>auc_test<span class="sc">:^15.3f}</span><span class="ss"> | </span><span class="sc">{</span>gap<span class="sc">:^15.3f}</span><span class="ss"> | </span><span class="sc">{</span>overfitting<span class="sc">:^10}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="spase_kernel_machine_files/figure-html/cell-7-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Summary of Model Performance:
+----------------------------------------------------------------------
+  Gamma    |    Train AUC    |    Test AUC     |       Gap       | Overfitting
+----------------------------------------------------------------------
+   0.1     |      0.935      |      0.426      |      0.509      |   Severe  
+   1.0     |      0.997      |      0.488      |      0.509      |   Severe  
+   10.0    |      0.984      |      0.471      |      0.513      |   Severe  
+   50.0    |      0.965      |      0.428      |      0.537      |   Severe  </code></pre>
+</div>
+</div>
+<p>All models show severe overfitting, as indicated by the large gap between training and test AUC. This occurs because we intentionally used a low regularization parameter (lambda = 0.01) to allow the models to overfit. The experiment highlights the importance of proper regularization in kernel methods. Without sufficient regularization, kernel methods can memorize the training data rather than generalize, especially with large gamma values that create very flexible decision boundaries.</p>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>In this blog post, we’ve explored sparse kernel machines through a series of experiments with kernel logistic regression. We’ve seen how:</p>
+<ul>
+<li>The regularization parameter lambda affects model sparsity, with higher values leading to fewer support points</li>
+<li>The kernel width parameter gamma controls the complexity of the decision boundary</li>
+<li>Kernel methods can effectively model nonlinear patterns, as demonstrated on the moons dataset</li>
+<li>Without proper regularization, kernel methods can severely overfit data</li>
+</ul>
+<p>These insights highlight the power and flexibility of kernel methods when used with appropriate hyperparameters. The sparsity induced by regularization is particularly important for ensuring computational efficiency during prediction, making these methods practical for real-world applications despite their theoretical complexity.</p>
 
 
 </section>

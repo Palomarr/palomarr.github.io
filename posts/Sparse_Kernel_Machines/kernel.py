@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 
 class KernelLogisticRegression:
     """
@@ -10,14 +9,13 @@ class KernelLogisticRegression:
     of the linear model. The L1 regularization ensures sparsity in the weight vector.
     
     Parameters
-    ----------
-    kernel : callable
-        A function that computes the kernel between two sets of data points.
-        Should have the signature: kernel(X_1, X_2, **kwargs) -> torch.Tensor
-    lam : float, default=0.1
-        Regularization strength. Larger values specify stronger regularization.
-    **kwargs : dict
-        Additional keyword arguments to pass to the kernel function.
+        kernel : callable
+            A function that computes the kernel between two sets of data points.
+            Should have the signature: kernel(X_1, X_2, **kwargs) -> torch.Tensor
+        lam : float, default=0.1
+            Regularization strength. Larger values specify stronger regularization.
+        **kwargs : dict
+            Additional keyword arguments to pass to the kernel function.
     """
     
     def __init__(self, kernel, lam=0.1, **kwargs):
@@ -26,6 +24,7 @@ class KernelLogisticRegression:
         self.kwargs = kwargs
         self.a = None
         self.X_train = None
+        self.K_cache = None
         
     def sigmoid(self, x):
         """
@@ -43,7 +42,7 @@ class KernelLogisticRegression:
         """
         return 1 / (1 + torch.exp(-x))
     
-    def score(self, X):
+    def score(self, X, recompute_kernel=False):
         """
         Compute scores for the input data using the kernel method.
         
@@ -51,6 +50,8 @@ class KernelLogisticRegression:
         ----------
         X : torch.Tensor
             Feature matrix of shape (m, p).
+        recompute_kernel : bool, default=False
+            Whether to recompute the kernel matrix or use the cached version if available.
             
         Returns
         -------
@@ -60,8 +61,12 @@ class KernelLogisticRegression:
         if self.X_train is None or self.a is None:
             raise ValueError("Model has not been fitted yet.")
         
-        # Compute the kernel matrix between X and X_train
-        K = self.kernel(X, self.X_train, **self.kwargs)
+        # Compute or use cached kernel matrix
+        if self.K_cache is None or recompute_kernel:
+            K = self.kernel(X, self.X_train, **self.kwargs)
+            self.K_cache = K
+        else:
+            K = self.K_cache
         
         # Compute the scores: s = K * a
         scores = K @ self.a
