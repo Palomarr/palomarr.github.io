@@ -192,6 +192,8 @@ background-size: cover;
 
 
 
+<section id="abstract" class="level2">
+<h2 class="anchored" data-anchor-id="abstract">Abstract</h2>
 <p>This notebook demonstrates a neural network approach to classifying music genres based on song lyrics and engineered features. We’ll create three different models:</p>
 <ol type="1">
 <li>A model that uses only the lyrics to classify genres</li>
@@ -199,37 +201,29 @@ background-size: cover;
 <li>A combined model that uses both lyrics and engineered features</li>
 </ol>
 <p>Finally, we’ll analyze the word embeddings learned by our models to uncover interesting patterns in how different genres are represented in the vector space.</p>
+</section>
 <section id="importing-libraries-and-loading-data" class="level2">
 <h2 class="anchored" data-anchor-id="importing-libraries-and-loading-data">1. Importing Libraries and Loading Data</h2>
-<div id="cell-3" class="cell" data-execution_count="88">
+<div id="cell-5" class="cell" data-execution_count="33">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch <span class="im">import</span> nn</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils.data <span class="im">import</span> Dataset, DataLoader</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> re</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> transformers <span class="im">import</span> BertTokenizer</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.io <span class="im">as</span> pio</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.decomposition <span class="im">import</span> PCA</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Set default Plotly template</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>pio.templates.default <span class="op">=</span> <span class="st">"plotly_white"</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> torch.device(<span class="st">"cuda"</span> <span class="cf">if</span> torch.cuda.is_available() <span class="cf">else</span> <span class="st">"cpu"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch <span class="im">import</span> nn</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils.data <span class="im">import</span> Dataset, DataLoader</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> StandardScaler</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> transformers <span class="im">import</span> BertTokenizer</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.decomposition <span class="im">import</span> PCA</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> torch.device(<span class="st">"cuda"</span> <span class="cf">if</span> torch.cuda.is_available() <span class="cf">else</span> <span class="st">"cpu"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="cell-4" class="cell" data-execution_count="89">
+<div id="cell-6" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the data</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/PhilChodrow/PIC16B/master/datasets/tcc_ceds_music.csv"</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(url)</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>df.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="89">
+<div class="cell-output cell-output-display" data-execution_count="2">
 <div>
 
 
@@ -391,7 +385,7 @@ background-size: cover;
 <section id="data-preprocessing" class="level3">
 <h3 class="anchored" data-anchor-id="data-preprocessing">Data Preprocessing</h3>
 <p>Let’s prepare our data for training by tokenizing lyrics, preparing engineered features, and performing train-validation split.</p>
-<div id="cell-6" class="cell" data-execution_count="90">
+<div id="cell-8" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># List of engineered features</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>engineered_features <span class="op">=</span> [<span class="st">'dating'</span>, <span class="st">'violence'</span>, <span class="st">'world/life'</span>, <span class="st">'night/time'</span>,</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                       <span class="st">'shake the audience'</span>,<span class="st">'family/gospel'</span>, <span class="st">'romantic'</span>,</span>
@@ -408,7 +402,7 @@ background-size: cover;
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>tokenizer <span class="op">=</span> BertTokenizer.from_pretrained(<span class="st">"google-bert/bert-base-uncased"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We split the data into training and validation sets. To establish a baseline for model performance, we calculate the base rate.</p>
-<div id="cell-8" class="cell" data-execution_count="91">
+<div id="cell-10" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>df_train, df_val <span class="op">=</span> train_test_split(df, test_size<span class="op">=</span><span class="fl">0.2</span>, random_state<span class="op">=</span><span class="dv">42</span>, stratify<span class="op">=</span>df[<span class="st">'genre_idx'</span>])</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>most_common_genre <span class="op">=</span> df_train[<span class="st">'genre'</span>].value_counts().idxmax()</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>most_common_count <span class="op">=</span> df_train[<span class="st">'genre'</span>].value_counts().<span class="bu">max</span>()</span>
@@ -425,7 +419,7 @@ Base rate (accuracy if always predicting most common class): 0.2482</code></pre>
 <section id="creating-the-dataset-class" class="level3">
 <h3 class="anchored" data-anchor-id="creating-the-dataset-class">Creating the Dataset Class</h3>
 <p>We implement a custom PyTorch Dataset class that handles both lyrics and engineered features, applying standardization to the numerical features.</p>
-<div id="cell-11" class="cell" data-execution_count="92">
+<div id="cell-13" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Function to pad sequences to a fixed length</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> pad(l, max_len):</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(l) <span class="op">&gt;</span> max_len:</span>
@@ -473,7 +467,7 @@ Base rate (accuracy if always predicting most common class): 0.2482</code></pre>
 <span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> lyrics, <span class="va">self</span>.y[idx]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We define the collate function for <code>DataLoader</code>.</p>
-<div id="cell-13" class="cell" data-execution_count="93">
+<div id="cell-15" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> collate(data):</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># For combined model (lyrics + features)</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">isinstance</span>(data[<span class="dv">0</span>][<span class="dv">0</span>], <span class="bu">tuple</span>):</span>
@@ -490,7 +484,7 @@ Base rate (accuracy if always predicting most common class): 0.2482</code></pre>
 <span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> X, y</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Then we create train and validation datasets using the <code>DataLoader</code> method.</p>
-<div id="cell-15" class="cell" data-execution_count="107">
+<div id="cell-17" class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>max_len <span class="op">=</span> <span class="dv">512</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> MusicDataset(df_train, tokenizer, max_len, feature_columns<span class="op">=</span>engineered_features)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>val_dataset <span class="op">=</span> MusicDataset(df_val, tokenizer, max_len, feature_columns<span class="op">=</span>engineered_features)</span>
@@ -505,7 +499,7 @@ Base rate (accuracy if always predicting most common class): 0.2482</code></pre>
 <section id="model-implementation" class="level2">
 <h2 class="anchored" data-anchor-id="model-implementation">2. Model Implementation</h2>
 <p>As required, we’ll implement three different models: 1. Lyrics-only model using word embeddings 2. Features-only model using fully connected layers 3. Combined model using both lyrics and engineered features</p>
-<div id="cell-17" class="cell" data-execution_count="95">
+<div id="cell-19" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Model 1: Lyrics-only model</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LyricsModel(nn.Module):</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, vocab_size, embedding_dim, num_classes):</span>
@@ -583,7 +577,7 @@ Base rate (accuracy if always predicting most common class): 0.2482</code></pre>
 <span id="cb9-75"><a href="#cb9-75" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> output</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We initialize our models with appropriate hyperparameters, including vocabulary size from the BERT tokenizer, embedding dimensions, and the number of output classes based on our genre mappings.</p>
-<div id="cell-19" class="cell" data-execution_count="96">
+<div id="cell-21" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define hyperparameters</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>vocab_size <span class="op">=</span> <span class="bu">len</span>(tokenizer.vocab)  <span class="co"># BERT tokenizer vocabulary size</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>embedding_dim <span class="op">=</span> <span class="dv">100</span></span>
@@ -599,7 +593,7 @@ Base rate (accuracy if always predicting most common class): 0.2482</code></pre>
 <section id="training-and-evaluation-functions" class="level2">
 <h2 class="anchored" data-anchor-id="training-and-evaluation-functions">3. Training and Evaluation Functions</h2>
 <p>These functions handle the training loop and evaluation process for all three model types, tracking metrics like loss and accuracy, and implementing early stopping by saving the best-performing model.</p>
-<div id="cell-22" class="cell" data-execution_count="97">
+<div id="cell-24" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train_model(model, model_type, train_loader, val_loader, criterion, optimizer, num_epochs<span class="op">=</span><span class="dv">10</span>):</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    best_val_acc <span class="op">=</span> <span class="fl">0.0</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    history <span class="op">=</span> {<span class="st">'train_loss'</span>: [], <span class="st">'train_acc'</span>: [], <span class="st">'val_loss'</span>: [], <span class="st">'val_acc'</span>: []}</span>
@@ -721,9 +715,9 @@ Base rate (accuracy if always predicting most common class): 0.2482</code></pre>
 <section id="training-the-models" class="level3">
 <h3 class="anchored" data-anchor-id="training-the-models">Training the Models</h3>
 <p>We train each model separately using the Adam optimizer, comparing their performance over multiple epochs.</p>
-<div id="cell-25" class="cell" data-execution_count="98">
+<div id="cell-27" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>num_epochs <span class="op">=</span> <span class="dv">20</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>learning_rate <span class="op">=</span> <span class="fl">0.0001</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>learning_rate <span class="op">=</span> <span class="fl">0.0002</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>criterion <span class="op">=</span> nn.CrossEntropyLoss()</span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize optimizers</span></span>
@@ -748,68 +742,68 @@ Base rate (accuracy if always predicting most common class): 0.2482</code></pre>
 <span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Training Lyrics Model...
-Epoch 1/20 | Train Loss: 1.9089 | Train Acc: 0.2354 | Val Loss: 1.8788 | Val Acc: 0.2481
-Epoch 2/20 | Train Loss: 1.8558 | Train Acc: 0.2482 | Val Loss: 1.8397 | Val Acc: 0.2481
-Epoch 3/20 | Train Loss: 1.8313 | Train Acc: 0.2482 | Val Loss: 1.8259 | Val Acc: 0.2481
-Epoch 4/20 | Train Loss: 1.8211 | Train Acc: 0.2482 | Val Loss: 1.8173 | Val Acc: 0.2481
-Epoch 5/20 | Train Loss: 1.8112 | Train Acc: 0.2482 | Val Loss: 1.8089 | Val Acc: 0.2481
-Epoch 6/20 | Train Loss: 1.8011 | Train Acc: 0.2483 | Val Loss: 1.7991 | Val Acc: 0.2481
-Epoch 7/20 | Train Loss: 1.7896 | Train Acc: 0.2488 | Val Loss: 1.7881 | Val Acc: 0.2483
-Epoch 8/20 | Train Loss: 1.7775 | Train Acc: 0.2519 | Val Loss: 1.7769 | Val Acc: 0.2529
-Epoch 9/20 | Train Loss: 1.7652 | Train Acc: 0.2581 | Val Loss: 1.7664 | Val Acc: 0.2629
-Epoch 10/20 | Train Loss: 1.7531 | Train Acc: 0.2647 | Val Loss: 1.7567 | Val Acc: 0.2707
-Epoch 11/20 | Train Loss: 1.7429 | Train Acc: 0.2729 | Val Loss: 1.7487 | Val Acc: 0.2775
-Epoch 12/20 | Train Loss: 1.7330 | Train Acc: 0.2778 | Val Loss: 1.7414 | Val Acc: 0.2809
-Epoch 13/20 | Train Loss: 1.7242 | Train Acc: 0.2853 | Val Loss: 1.7352 | Val Acc: 0.2860
-Epoch 14/20 | Train Loss: 1.7163 | Train Acc: 0.2901 | Val Loss: 1.7297 | Val Acc: 0.2923
-Epoch 15/20 | Train Loss: 1.7088 | Train Acc: 0.2963 | Val Loss: 1.7246 | Val Acc: 0.2967
-Epoch 16/20 | Train Loss: 1.7034 | Train Acc: 0.2986 | Val Loss: 1.7200 | Val Acc: 0.2992
-Epoch 17/20 | Train Loss: 1.6951 | Train Acc: 0.3058 | Val Loss: 1.7160 | Val Acc: 0.3013
-Epoch 18/20 | Train Loss: 1.6891 | Train Acc: 0.3090 | Val Loss: 1.7118 | Val Acc: 0.3061
-Epoch 19/20 | Train Loss: 1.6830 | Train Acc: 0.3160 | Val Loss: 1.7079 | Val Acc: 0.3096
-Epoch 20/20 | Train Loss: 1.6762 | Train Acc: 0.3192 | Val Loss: 1.7042 | Val Acc: 0.3108
+Epoch 1/20 | Train Loss: 1.8928 | Train Acc: 0.2234 | Val Loss: 1.8439 | Val Acc: 0.2481
+Epoch 2/20 | Train Loss: 1.8273 | Train Acc: 0.2482 | Val Loss: 1.8169 | Val Acc: 0.2481
+Epoch 3/20 | Train Loss: 1.8051 | Train Acc: 0.2482 | Val Loss: 1.7964 | Val Acc: 0.2485
+Epoch 4/20 | Train Loss: 1.7797 | Train Acc: 0.2521 | Val Loss: 1.7721 | Val Acc: 0.2592
+Epoch 5/20 | Train Loss: 1.7527 | Train Acc: 0.2681 | Val Loss: 1.7513 | Val Acc: 0.2756
+Epoch 6/20 | Train Loss: 1.7312 | Train Acc: 0.2821 | Val Loss: 1.7360 | Val Acc: 0.2862
+Epoch 7/20 | Train Loss: 1.7119 | Train Acc: 0.2950 | Val Loss: 1.7238 | Val Acc: 0.2909
+Epoch 8/20 | Train Loss: 1.6971 | Train Acc: 0.3050 | Val Loss: 1.7142 | Val Acc: 0.2987
+Epoch 9/20 | Train Loss: 1.6823 | Train Acc: 0.3183 | Val Loss: 1.7059 | Val Acc: 0.3080
+Epoch 10/20 | Train Loss: 1.6707 | Train Acc: 0.3278 | Val Loss: 1.6982 | Val Acc: 0.3121
+Epoch 11/20 | Train Loss: 1.6565 | Train Acc: 0.3355 | Val Loss: 1.6912 | Val Acc: 0.3195
+Epoch 12/20 | Train Loss: 1.6453 | Train Acc: 0.3406 | Val Loss: 1.6852 | Val Acc: 0.3237
+Epoch 13/20 | Train Loss: 1.6329 | Train Acc: 0.3484 | Val Loss: 1.6790 | Val Acc: 0.3278
+Epoch 14/20 | Train Loss: 1.6206 | Train Acc: 0.3581 | Val Loss: 1.6739 | Val Acc: 0.3299
+Epoch 15/20 | Train Loss: 1.6095 | Train Acc: 0.3617 | Val Loss: 1.6689 | Val Acc: 0.3371
+Epoch 16/20 | Train Loss: 1.5989 | Train Acc: 0.3680 | Val Loss: 1.6641 | Val Acc: 0.3403
+Epoch 17/20 | Train Loss: 1.5880 | Train Acc: 0.3735 | Val Loss: 1.6601 | Val Acc: 0.3410
+Epoch 18/20 | Train Loss: 1.5782 | Train Acc: 0.3814 | Val Loss: 1.6559 | Val Acc: 0.3450
+Epoch 19/20 | Train Loss: 1.5668 | Train Acc: 0.3865 | Val Loss: 1.6525 | Val Acc: 0.3448
+Epoch 20/20 | Train Loss: 1.5565 | Train Acc: 0.3929 | Val Loss: 1.6493 | Val Acc: 0.3477
 Training Features Model...
-Epoch 1/20 | Train Loss: 1.9323 | Train Acc: 0.1756 | Val Loss: 1.8592 | Val Acc: 0.2462
-Epoch 2/20 | Train Loss: 1.8119 | Train Acc: 0.2630 | Val Loss: 1.7585 | Val Acc: 0.2902
-Epoch 3/20 | Train Loss: 1.7342 | Train Acc: 0.2983 | Val Loss: 1.6882 | Val Acc: 0.3212
-Epoch 4/20 | Train Loss: 1.6836 | Train Acc: 0.3179 | Val Loss: 1.6426 | Val Acc: 0.3369
-Epoch 5/20 | Train Loss: 1.6493 | Train Acc: 0.3313 | Val Loss: 1.6149 | Val Acc: 0.3394
-Epoch 6/20 | Train Loss: 1.6307 | Train Acc: 0.3407 | Val Loss: 1.5966 | Val Acc: 0.3448
-Epoch 7/20 | Train Loss: 1.6176 | Train Acc: 0.3428 | Val Loss: 1.5836 | Val Acc: 0.3505
-Epoch 8/20 | Train Loss: 1.6067 | Train Acc: 0.3449 | Val Loss: 1.5736 | Val Acc: 0.3526
-Epoch 9/20 | Train Loss: 1.5983 | Train Acc: 0.3478 | Val Loss: 1.5654 | Val Acc: 0.3533
-Epoch 10/20 | Train Loss: 1.5931 | Train Acc: 0.3515 | Val Loss: 1.5585 | Val Acc: 0.3563
-Epoch 11/20 | Train Loss: 1.5878 | Train Acc: 0.3534 | Val Loss: 1.5525 | Val Acc: 0.3588
-Epoch 12/20 | Train Loss: 1.5829 | Train Acc: 0.3560 | Val Loss: 1.5477 | Val Acc: 0.3641
-Epoch 13/20 | Train Loss: 1.5751 | Train Acc: 0.3558 | Val Loss: 1.5431 | Val Acc: 0.3635
-Epoch 14/20 | Train Loss: 1.5717 | Train Acc: 0.3604 | Val Loss: 1.5393 | Val Acc: 0.3678
-Epoch 15/20 | Train Loss: 1.5681 | Train Acc: 0.3640 | Val Loss: 1.5360 | Val Acc: 0.3690
-Epoch 16/20 | Train Loss: 1.5675 | Train Acc: 0.3649 | Val Loss: 1.5329 | Val Acc: 0.3700
-Epoch 17/20 | Train Loss: 1.5612 | Train Acc: 0.3659 | Val Loss: 1.5304 | Val Acc: 0.3730
-Epoch 18/20 | Train Loss: 1.5602 | Train Acc: 0.3648 | Val Loss: 1.5284 | Val Acc: 0.3748
-Epoch 19/20 | Train Loss: 1.5560 | Train Acc: 0.3689 | Val Loss: 1.5259 | Val Acc: 0.3769
-Epoch 20/20 | Train Loss: 1.5595 | Train Acc: 0.3665 | Val Loss: 1.5241 | Val Acc: 0.3771
+Epoch 1/20 | Train Loss: 1.8053 | Train Acc: 0.2633 | Val Loss: 1.7048 | Val Acc: 0.3140
+Epoch 2/20 | Train Loss: 1.6787 | Train Acc: 0.3152 | Val Loss: 1.6226 | Val Acc: 0.3454
+Epoch 3/20 | Train Loss: 1.6246 | Train Acc: 0.3412 | Val Loss: 1.5818 | Val Acc: 0.3515
+Epoch 4/20 | Train Loss: 1.6059 | Train Acc: 0.3471 | Val Loss: 1.5612 | Val Acc: 0.3607
+Epoch 5/20 | Train Loss: 1.5876 | Train Acc: 0.3563 | Val Loss: 1.5490 | Val Acc: 0.3706
+Epoch 6/20 | Train Loss: 1.5785 | Train Acc: 0.3616 | Val Loss: 1.5417 | Val Acc: 0.3741
+Epoch 7/20 | Train Loss: 1.5697 | Train Acc: 0.3599 | Val Loss: 1.5354 | Val Acc: 0.3748
+Epoch 8/20 | Train Loss: 1.5650 | Train Acc: 0.3601 | Val Loss: 1.5310 | Val Acc: 0.3759
+Epoch 9/20 | Train Loss: 1.5595 | Train Acc: 0.3669 | Val Loss: 1.5274 | Val Acc: 0.3796
+Epoch 10/20 | Train Loss: 1.5539 | Train Acc: 0.3676 | Val Loss: 1.5241 | Val Acc: 0.3799
+Epoch 11/20 | Train Loss: 1.5526 | Train Acc: 0.3677 | Val Loss: 1.5215 | Val Acc: 0.3847
+Epoch 12/20 | Train Loss: 1.5479 | Train Acc: 0.3766 | Val Loss: 1.5192 | Val Acc: 0.3817
+Epoch 13/20 | Train Loss: 1.5457 | Train Acc: 0.3718 | Val Loss: 1.5166 | Val Acc: 0.3833
+Epoch 14/20 | Train Loss: 1.5420 | Train Acc: 0.3701 | Val Loss: 1.5149 | Val Acc: 0.3811
+Epoch 15/20 | Train Loss: 1.5404 | Train Acc: 0.3745 | Val Loss: 1.5128 | Val Acc: 0.3820
+Epoch 16/20 | Train Loss: 1.5385 | Train Acc: 0.3768 | Val Loss: 1.5118 | Val Acc: 0.3824
+Epoch 17/20 | Train Loss: 1.5363 | Train Acc: 0.3741 | Val Loss: 1.5105 | Val Acc: 0.3831
+Epoch 18/20 | Train Loss: 1.5321 | Train Acc: 0.3782 | Val Loss: 1.5086 | Val Acc: 0.3845
+Epoch 19/20 | Train Loss: 1.5310 | Train Acc: 0.3775 | Val Loss: 1.5079 | Val Acc: 0.3857
+Epoch 20/20 | Train Loss: 1.5296 | Train Acc: 0.3801 | Val Loss: 1.5064 | Val Acc: 0.3833
 Training Combined Model...
-Epoch 1/20 | Train Loss: 1.8684 | Train Acc: 0.2116 | Val Loss: 1.7831 | Val Acc: 0.2493
-Epoch 2/20 | Train Loss: 1.7372 | Train Acc: 0.2803 | Val Loss: 1.6807 | Val Acc: 0.3274
-Epoch 3/20 | Train Loss: 1.6537 | Train Acc: 0.3330 | Val Loss: 1.6108 | Val Acc: 0.3507
-Epoch 4/20 | Train Loss: 1.6089 | Train Acc: 0.3521 | Val Loss: 1.5764 | Val Acc: 0.3656
-Epoch 5/20 | Train Loss: 1.5815 | Train Acc: 0.3625 | Val Loss: 1.5557 | Val Acc: 0.3693
-Epoch 6/20 | Train Loss: 1.5692 | Train Acc: 0.3694 | Val Loss: 1.5422 | Val Acc: 0.3752
-Epoch 7/20 | Train Loss: 1.5512 | Train Acc: 0.3736 | Val Loss: 1.5310 | Val Acc: 0.3764
-Epoch 8/20 | Train Loss: 1.5410 | Train Acc: 0.3817 | Val Loss: 1.5215 | Val Acc: 0.3838
-Epoch 9/20 | Train Loss: 1.5315 | Train Acc: 0.3845 | Val Loss: 1.5138 | Val Acc: 0.3887
-Epoch 10/20 | Train Loss: 1.5203 | Train Acc: 0.3901 | Val Loss: 1.5073 | Val Acc: 0.3947
-Epoch 11/20 | Train Loss: 1.5098 | Train Acc: 0.3944 | Val Loss: 1.5009 | Val Acc: 0.3995
-Epoch 12/20 | Train Loss: 1.5065 | Train Acc: 0.3986 | Val Loss: 1.4972 | Val Acc: 0.4004
-Epoch 13/20 | Train Loss: 1.5026 | Train Acc: 0.3996 | Val Loss: 1.4921 | Val Acc: 0.4035
-Epoch 14/20 | Train Loss: 1.4919 | Train Acc: 0.4055 | Val Loss: 1.4874 | Val Acc: 0.4060
-Epoch 15/20 | Train Loss: 1.4804 | Train Acc: 0.4139 | Val Loss: 1.4842 | Val Acc: 0.4065
-Epoch 16/20 | Train Loss: 1.4773 | Train Acc: 0.4110 | Val Loss: 1.4800 | Val Acc: 0.4097
-Epoch 17/20 | Train Loss: 1.4743 | Train Acc: 0.4153 | Val Loss: 1.4760 | Val Acc: 0.4125
-Epoch 18/20 | Train Loss: 1.4689 | Train Acc: 0.4179 | Val Loss: 1.4746 | Val Acc: 0.4116
-Epoch 19/20 | Train Loss: 1.4631 | Train Acc: 0.4191 | Val Loss: 1.4706 | Val Acc: 0.4143
-Epoch 20/20 | Train Loss: 1.4541 | Train Acc: 0.4242 | Val Loss: 1.4679 | Val Acc: 0.4155</code></pre>
+Epoch 1/20 | Train Loss: 1.7842 | Train Acc: 0.2763 | Val Loss: 1.6671 | Val Acc: 0.3170
+Epoch 2/20 | Train Loss: 1.6296 | Train Acc: 0.3386 | Val Loss: 1.5721 | Val Acc: 0.3586
+Epoch 3/20 | Train Loss: 1.5763 | Train Acc: 0.3607 | Val Loss: 1.5349 | Val Acc: 0.3688
+Epoch 4/20 | Train Loss: 1.5457 | Train Acc: 0.3734 | Val Loss: 1.5097 | Val Acc: 0.3896
+Epoch 5/20 | Train Loss: 1.5201 | Train Acc: 0.3918 | Val Loss: 1.4925 | Val Acc: 0.3989
+Epoch 6/20 | Train Loss: 1.5020 | Train Acc: 0.3946 | Val Loss: 1.4805 | Val Acc: 0.3995
+Epoch 7/20 | Train Loss: 1.4872 | Train Acc: 0.4051 | Val Loss: 1.4720 | Val Acc: 0.4081
+Epoch 8/20 | Train Loss: 1.4686 | Train Acc: 0.4172 | Val Loss: 1.4642 | Val Acc: 0.4107
+Epoch 9/20 | Train Loss: 1.4562 | Train Acc: 0.4217 | Val Loss: 1.4560 | Val Acc: 0.4148
+Epoch 10/20 | Train Loss: 1.4458 | Train Acc: 0.4262 | Val Loss: 1.4504 | Val Acc: 0.4176
+Epoch 11/20 | Train Loss: 1.4321 | Train Acc: 0.4338 | Val Loss: 1.4461 | Val Acc: 0.4231
+Epoch 12/20 | Train Loss: 1.4202 | Train Acc: 0.4393 | Val Loss: 1.4394 | Val Acc: 0.4257
+Epoch 13/20 | Train Loss: 1.4092 | Train Acc: 0.4448 | Val Loss: 1.4376 | Val Acc: 0.4248
+Epoch 14/20 | Train Loss: 1.4017 | Train Acc: 0.4490 | Val Loss: 1.4323 | Val Acc: 0.4280
+Epoch 15/20 | Train Loss: 1.3906 | Train Acc: 0.4543 | Val Loss: 1.4301 | Val Acc: 0.4303
+Epoch 16/20 | Train Loss: 1.3803 | Train Acc: 0.4579 | Val Loss: 1.4280 | Val Acc: 0.4368
+Epoch 17/20 | Train Loss: 1.3686 | Train Acc: 0.4608 | Val Loss: 1.4269 | Val Acc: 0.4386
+Epoch 18/20 | Train Loss: 1.3581 | Train Acc: 0.4696 | Val Loss: 1.4254 | Val Acc: 0.4382
+Epoch 19/20 | Train Loss: 1.3451 | Train Acc: 0.4731 | Val Loss: 1.4247 | Val Acc: 0.4381
+Epoch 20/20 | Train Loss: 1.3326 | Train Acc: 0.4839 | Val Loss: 1.4233 | Val Acc: 0.4407</code></pre>
 </div>
 </div>
 </section>
@@ -817,7 +811,7 @@ Epoch 20/20 | Train Loss: 1.4541 | Train Acc: 0.4242 | Val Loss: 1.4679 | Val Ac
 <section id="results-comparison" class="level2">
 <h2 class="anchored" data-anchor-id="results-comparison">4. Results Comparison</h2>
 <p>We visualize the training and validation metrics across all models to compare their performance.</p>
-<div id="cell-28" class="cell" data-execution_count="99">
+<div id="cell-30" class="cell" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">14</span>, <span class="dv">5</span>))</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot training &amp; validation accuracy values</span></span>
@@ -856,12 +850,12 @@ Epoch 20/20 | Train Loss: 1.4541 | Train Acc: 0.4242 | Val Loss: 1.4679 | Val Ac
 </div>
 </div>
 </div>
-<p>All models significantly outperform the base rate (25%), demonstrating that both lyrics and engineered features provide valuable signals for genre classification. The Combined model achieves the highest accuracy (~42-43%), confirming that integrating textual and audio information creates a more comprehensive representation of music genres. Notably, the Features-only model (~37% accuracy) surpasses the Lyrics-only model (~31%), suggesting that acoustic characteristics more strongly correlate with genre than lyrical content.</p>
+<p>All models significantly outperform the base rate (25%), demonstrating that both lyrics and engineered features provide valuable signals for genre classification. The Combined model achieves the highest accuracy (~44%), confirming that integrating textual and audio information creates a more comprehensive representation of music genres. Notably, the Features-only model (~38% accuracy) surpasses the Lyrics-only model (~34%), suggesting that acoustic characteristics more strongly correlate with genre than lyrical content.</p>
 <p>The close alignment between training and validation curves indicates robust generalization across models, with minimal overfitting. The Combined model exhibits the lowest loss values throughout training, further validating its superior performance. All models show progressive improvement across epochs, though the Lyrics model displays the largest gap between training and validation loss, indicating some challenges in generalizing purely text-based features. These findings highlight the complementary nature of multimodal approaches in music classification tasks and demonstrate how different data sources capture distinct aspects of musical genre identity.</p>
 <section id="word-embedding-visualization" class="level3">
 <h3 class="anchored" data-anchor-id="word-embedding-visualization">Word Embedding Visualization</h3>
 <p>Now let’s visualize the word embeddings learned by our lyrics model to see if there are any interesting patterns or associations between words that might be relevant to genre classification.</p>
-<div id="cell-31" class="cell" data-execution_count="103">
+<div id="cell-33" class="cell">
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract the embedding layer weights</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>embedding_weights <span class="op">=</span> lyrics_model.embedding.weight.data.cpu().numpy()</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -869,71 +863,93 @@ Epoch 20/20 | Train Loss: 1.4541 | Train Acc: 0.4242 | Val Loss: 1.4679 | Val Ac
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>vocab <span class="op">=</span> <span class="bu">list</span>(tokenizer.vocab.keys())</span>
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Use PCA to reduce dimensions for visualization</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.decomposition <span class="im">import</span> PCA</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>pca <span class="op">=</span> PCA(n_components<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>embedding_pca <span class="op">=</span> pca.fit_transform(embedding_weights)</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>embedding_df <span class="op">=</span> pd.DataFrame({</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">'word'</span>: vocab,</span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">'x0'</span>: embedding_pca[:, <span class="dv">0</span>],</span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">'x1'</span>: embedding_pca[:, <span class="dv">1</span>]</span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> px.scatter(</span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>    embedding_df.sample(<span class="dv">300</span>),</span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span><span class="st">"x0"</span>,</span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    y<span class="op">=</span><span class="st">"x1"</span>,</span>
-<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    size<span class="op">=</span>[<span class="fl">0.1</span>] <span class="op">*</span> <span class="bu">len</span>(embedding_df.sample(<span class="dv">300</span>)),</span>
-<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>    hover_name<span class="op">=</span><span class="st">"word"</span>,</span>
-<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>    title<span class="op">=</span><span class="st">"Word Embedding Visualization"</span>,</span>
-<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>pca <span class="op">=</span> PCA(n_components<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>embedding_pca <span class="op">=</span> pca.fit_transform(embedding_weights)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>embedding_df <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">'word'</span>: vocab,</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">'x0'</span>: embedding_pca[:, <span class="dv">0</span>],</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">'x1'</span>: embedding_pca[:, <span class="dv">1</span>]</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>sample_df <span class="op">=</span> embedding_df.sample(<span class="dv">1000</span>)</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Cannot display plotly generated images in quarto, so we use static plot instead</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">8</span>))</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>plt.scatter(</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    sample_df[<span class="st">"x0"</span>],</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>    sample_df[<span class="st">"x1"</span>],</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>    s<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>    alpha<span class="op">=</span><span class="fl">0.7</span></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Word Embedding Visualization"</span>)</span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"x0"</span>)</span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"x1"</span>)</span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>plt.grid(alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<pre><code>Unable to display output for mime type(s): application/vnd.plotly.v1+json</code></pre>
+<div>
+<figure class="figure">
+<p><img src="Deep_Music_Genre_Classification_files/figure-html/cell-14-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
 </div>
 </div>
 <p>This visualization shows how the model organizes vocabulary words in a semantic space. While we don’t see distinct, well-separated clusters, the distribution pattern suggests the model has captured subtle relationships between words. The spread of points indicates varied semantic relationships, with most words concentrated in the central region and some outliers at the periphery.</p>
 <p>This representation forms the foundation of how our lyrics-based model understands relationships between concepts. The somewhat diffuse nature of the embedding space aligns with our earlier finding that lyrics alone (31% accuracy) provide less genre-predictive power than audio features.</p>
 <p>Then lets examine if embedding distances reflect meaningful genre relationships.</p>
-<div id="cell-34" class="cell" data-execution_count="104">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>words <span class="op">=</span> [<span class="st">'rock'</span>, <span class="st">'pop'</span>, <span class="st">'hip'</span>, <span class="st">'hop'</span>, <span class="st">'rap'</span>, <span class="st">'dance'</span>, <span class="st">'club'</span>, <span class="st">'metal'</span>, <span class="st">'jazz'</span>, <span class="st">'blues'</span>]</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter for words</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>cluster_df <span class="op">=</span> embedding_df[embedding_df[<span class="st">'word'</span>].isin(words)].copy()</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">len</span>(cluster_df) <span class="op">&lt;</span> <span class="bu">len</span>(words):</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    missing <span class="op">=</span> <span class="bu">set</span>(words) <span class="op">-</span> <span class="bu">set</span>(cluster_df[<span class="st">'word'</span>].values)</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Warning: Some words not found in vocabulary: </span><span class="sc">{</span>missing<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> px.scatter(</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    cluster_df,</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span><span class="st">'x0'</span>, </span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    y<span class="op">=</span><span class="st">'x1'</span>,</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    text<span class="op">=</span><span class="st">'word'</span>,</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    hover_name<span class="op">=</span><span class="st">'word'</span>,</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    title<span class="op">=</span><span class="st">"Music Genre Words in Embedding Space"</span>,</span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    labels<span class="op">=</span>{<span class="st">'x'</span>: <span class="st">'PC1'</span>, <span class="st">'y'</span>: <span class="st">'PC2'</span>},</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    height<span class="op">=</span><span class="dv">500</span>,</span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>    width<span class="op">=</span><span class="dv">700</span></span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>fig.update_traces(</span>
-<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">10</span>, opacity<span class="op">=</span><span class="fl">0.8</span>),</span>
-<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>    textposition<span class="op">=</span><span class="st">'top center'</span>,</span>
-<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>    textfont<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">10</span>)</span>
-<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div id="cell-36" class="cell" data-execution_count="32">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>words <span class="op">=</span> [<span class="st">'rock'</span>, <span class="st">'pop'</span>, <span class="st">'hip'</span>, <span class="st">'hop'</span>, <span class="st">'rap'</span>, <span class="st">'dance'</span>, <span class="st">'club'</span>, <span class="st">'metal'</span>, <span class="st">'jazz'</span>, <span class="st">'blues'</span>]</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter for words</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>cluster_df <span class="op">=</span> embedding_df[embedding_df[<span class="st">'word'</span>].isin(words)].copy()</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">len</span>(cluster_df) <span class="op">&lt;</span> <span class="bu">len</span>(words):</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    missing <span class="op">=</span> <span class="bu">set</span>(words) <span class="op">-</span> <span class="bu">set</span>(cluster_df[<span class="st">'word'</span>].values)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Warning: Some words not found in vocabulary: </span><span class="sc">{</span>missing<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">7</span>, <span class="dv">5</span>))  <span class="co"># Width, height in inches</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Create scatter plot</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>plt.scatter(</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    cluster_df[<span class="st">'x0'</span>],</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    cluster_df[<span class="st">'x1'</span>],</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    s<span class="op">=</span><span class="dv">100</span>,</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    alpha<span class="op">=</span><span class="fl">0.8</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, row <span class="kw">in</span> cluster_df.iterrows():</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    plt.annotate(</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>        row[<span class="st">'word'</span>],</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>        (row[<span class="st">'x0'</span>], row[<span class="st">'x1'</span>]),</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>        textcoords<span class="op">=</span><span class="st">"offset points"</span>, </span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>        xytext<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">5</span>),</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>        ha<span class="op">=</span><span class="st">'center'</span>,</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>        fontsize<span class="op">=</span><span class="dv">10</span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Music Genre Words in Embedding Space"</span>)</span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"PC1"</span>)</span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"PC2"</span>)</span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>plt.grid(alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-display">
-<pre><code>Unable to display output for mime type(s): application/vnd.plotly.v1+json</code></pre>
+<div>
+<figure class="figure">
+<p><img src="Deep_Music_Genre_Classification_files/figure-html/cell-15-output-1.png" class="img-fluid figure-img"></p>
+</figure>
 </div>
 </div>
-<p>The model has organized genre terms in a semantically meaningful embedding space that reveals conceptual relationships between musical categories. A distinct separation exists between electronic/dance music terminology (“club”, “dance”) and traditional genres like “jazz” (isolated in the lower left), showing how the model captures their acoustic and cultural differences.</p>
+</div>
+<p>The 2D embedding visualization of music genres reveals significant limitations in representing the complex relationships between musical styles. While examining this graph, it becomes apparent that the dimensionality reduction has created some counterintuitive groupings that don’t align with our understanding of musical relationships.</p>
+<p>The positioning of certain genres raises questions about the effectiveness of this representation. For instance, metal and club music appear relatively close despite having vastly different sonic characteristics and cultural foundations. Similarly, rock is positioned closer to dance than to metal, which contradicts conventional understanding of genre relationships. Blues appears oddly isolated in the visualization, failing to reflect its important historical connections to both jazz and rock music.</p>
+<p>The visualization does capture some expected relationships correctly, such as the proximity between hip hop and rap, which aligns with their close musical and cultural ties. However, these occasional successes don’t overcome the fundamental issue: the 2D reduction simply loses too much information to meaningfully represent the multidimensional relationships between music genres.</p>
 </section>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">5. Conclusion</h2>
-<p>In this music genre classification project, we’ve demonstrated that neural networks can effectively learn the complex patterns that distinguish musical genres. Our models achieved significant improvements over the baseline, with the Combined model (42-43% accuracy) outperforming both the Features-only (37%) and Lyrics-only (31%) approaches. This confirms our hypothesis that both lyrical content and acoustic characteristics contribute meaningful but distinct information to genre identity. The word embedding visualizations revealed how our model organizes music concepts in semantic space, capturing relationships between genres that align with musical intuition. While genre boundaries remain inherently fluid, our computational approach offers valuable insights into the linguistic and acoustic patterns that define musical categories.</p>
+<p>In this music genre classification project, we’ve demonstrated that neural networks can effectively learn the complex patterns that distinguish musical genres. Our models achieved significant improvements over the baseline, with the Combined model (44% accuracy) outperforming both the Features-only (38%) and Lyrics-only (34%) approaches. This confirms our hypothesis that both lyrical content and acoustic characteristics contribute meaningful but distinct information to genre identity.</p>
+<p>While our word embedding visualizations attempted to capture how the model organizes music concepts in semantic space, the 2D representation revealed limitations in accurately depicting genre relationships. This limitation highlights the inherent complexity of musical genre boundaries, which remain fluid and multidimensional in ways that challenge both human categorization and computational approaches.</p>
 
 
 </section>
